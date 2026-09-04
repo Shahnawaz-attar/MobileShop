@@ -1,0 +1,289 @@
+// ============================================
+// MobileShop — Single Shop Database Schema
+// ============================================
+// Every deployment has ONE shop. No shopId discriminator.
+// Use getShop() to retrieve the singleton Shop row.
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Enums ---
+
+enum Role {
+  OWNER
+}
+
+enum Condition {
+  LIKE_NEW
+  EXCELLENT
+  GOOD
+  FAIR
+}
+
+/// The kind of device being sold. Drives which fields are relevant in the form.
+/// A shop may sell phones, tablets, and other pre-owned devices.
+enum DeviceType {
+  PHONE
+  TABLET
+  OTHER
+}
+
+enum Availability {
+  DRAFT
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+enum BatteryType {
+  PERCENTAGE
+  RATED
+  UNKNOWN
+}
+
+enum BatteryRating {
+  GOOD
+  AVERAGE
+  NEEDS_REPLACEMENT
+}
+
+enum MediaKind {
+  FRONT
+  BACK
+  SIDE
+  SCREEN
+  SCREEN_OFF
+  CAMERA
+  BATTERY_SCREEN
+  BOX
+  ACCESSORY
+  DAMAGE
+  OTHER
+}
+
+enum EventType {
+  PAGE_VIEW
+  PRODUCT_VIEW
+  WHATSAPP_CLICK
+  CALL_CLICK
+  SEARCH
+  DIRECTIONS_CLICK
+  SHARE_CLICK
+  QR_SCAN
+}
+
+// --- Models ---
+
+/// The singleton shop identity for this deployment.
+/// Application code should use getShop() and treat this as the deployment's identity.
+model Shop {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String
+  tagline      String?
+  about        String?  @db.Text
+  logoUrl              String?
+  logoPublicId         String?
+  footerLogoUrl        String?
+  footerLogoPublicId   String?
+  dashboardLogoUrl     String?
+  dashboardLogoPublicId String?
+  coverUrl             String?
+  phone        String
+  whatsapp     String
+  email        String?
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  pincode      String
+  lat          Float?
+  lng          Float?
+  mapsUrl      String?
+  instagram    String?
+  facebook     String?
+  hours        Json
+  yearsInBiz   Int?
+  trustBadges  Json
+  policies     Json
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// Shop owner — one per deployment. No public signup.
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role      @default(OWNER)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+/// Phone brand (Apple, Samsung, etc.)
+model Brand {
+  id        String @id @default(cuid())
+  name      String @unique
+  slug      String @unique
+  logoUrl   String?
+  sortOrder Int    @default(0)
+
+  models   PhoneModel[]
+  products Product[]
+}
+
+/// Specific phone model (iPhone 15, Galaxy S24, etc.)
+model PhoneModel {
+  id          String @id @default(cuid())
+  brandId     String
+  name        String
+  slug        String
+  releaseYear Int?
+  specs       Json?
+
+  brand    Brand     @relation(fields: [brandId], references: [id])
+  products Product[]
+
+  @@unique([brandId, slug])
+  @@index([brandId])
+}
+
+/// A pre-owned device listing — the core business entity.
+/// Covers phones, tablets, and other devices a shop may sell.
+model Product {
+  id             String       @id @default(cuid())
+  slug           String       @unique
+  brandId        String
+  modelId        String?
+  title          String
+  /// Kind of device — drives which fields are relevant (battery %, SIM, etc.)
+  deviceType     DeviceType   @default(PHONE)
+  variant        String?
+  storageGb      Int?
+  ramGb          Int?
+  colour         String?
+
+  /// Price in integer paise — NEVER floating point
+  pricePaise     Int
+  /// MRP in integer paise for discount display
+  mrpPaise       Int?
+
+  condition      Condition
+  conditionNotes String?      @db.Text
+
+  batteryType    BatteryType  @default(UNKNOWN)
+  batteryPct     Int?
+  batteryRating  BatteryRating?
+  batteryNote    String?
+
+  warrantyMonths Int?
+  warrantyNote   String?
+
+  hasBox           Boolean  @default(false)
+  hasCharger       Boolean  @default(false)
+  hasCable         Boolean  @default(false)
+  otherAccessories String[]
+
+  simType     String?
+  networkNote String?
+  osVersion   String?
+  specs       Json?
+  description String?  @db.Text
+
+  availability Availability @default(DRAFT)
+  isFeatured   Boolean      @default(false)
+  /// Set only on first transition to AVAILABLE — never invented
+  publishedAt  DateTime?
+  /// Set when SOLD; cleared if reverted
+  soldAt       DateTime?
+
+  /// Private — optional last 4 digits of device reference
+  deviceRefLast4 String? @db.Text
+  /// Private — internal notes never shown to buyers
+  internalNotes  String? @db.Text
+  purchasedAt    DateTime?
+
+  /// Full-text search field — rebuilt on every product write
+  searchText String?
+  viewCount  Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brand Brand       @relation(fields: [brandId], references: [id])
+  model PhoneModel? @relation(fields: [modelId], references: [id])
+  media Media[]
+
+  @@index([availability, publishedAt(sort: Desc)])
+  @@index([availability, pricePaise])
+  @@index([brandId, availability])
+  @@index([isFeatured, availability])
+}
+
+/// Product image with kind classification and sort order.
+model Media {
+  id        String    @id @default(cuid())
+  productId String?
+  kind      MediaKind @default(OTHER)
+  publicId  String
+  url       String
+  width     Int?
+  height    Int?
+  blurhash  String?
+  alt       String?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+}
+
+/// Site-wide announcement banner — one active at a time.
+model Announcement {
+  id       String    @id @default(cuid())
+  title    String
+  body     String?
+  ctaLabel String?
+  ctaHref  String?
+  startsAt DateTime?
+  endsAt   DateTime?
+  isActive Boolean   @default(true)
+
+  @@index([isActive, endsAt])
+}
+
+/// Owner-entered customer testimonial — clearly labelled as shop-provided.
+/// Do NOT emit Review/AggregateRating structured data for these.
+model Testimonial {
+  id           String   @id @default(cuid())
+  customerName String
+  text         String   @db.Text
+  isPublished  Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([isPublished, sortOrder])
+}
+
+/// Analytics event — no raw IP addresses stored.
+/// Uses daily salted session hash for unique visitor estimation.
+model AnalyticsEvent {
+  id          String    @id @default(cuid())
+  type        EventType
+  productId   String?
+  meta        Json?
+  sessionHash String?
+  createdAt   DateTime  @default(now())
+
+  @@index([type, createdAt])
+  @@index([productId, type])
+}
