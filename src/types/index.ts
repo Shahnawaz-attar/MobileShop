@@ -258,11 +258,36 @@ export interface BrandOption {
   slug: string;
 }
 
-/** Model option — for the cascading model dropdown */
+/** Model option — filtered by brand + device type */
 export interface ModelOption {
   id: string;
   name: string;
   brandId: string;
+  deviceType: DeviceType;
+}
+
+/** Owner insights — weekly interest, never expose sessionHash or raw event rows */
+export interface OwnerInsightsTotals {
+  productViews: number;
+  whatsappClicks: number;
+  callClicks: number;
+  searches: number;
+  directionsClicks: number;
+  shareClicks: number;
+  qrScans: number;
+}
+
+export interface ProductInterestRow {
+  productId: string;
+  title: string;
+  viewCount: number;
+  whatsappClicks: number;
+}
+
+export interface OwnerInsights {
+  weekStartsAt: Date;
+  totals: OwnerInsightsTotals;
+  products: ProductInterestRow[];
 }
 
 /** API result wrapper — typed success/error pattern */

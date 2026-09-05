@@ -4,6 +4,7 @@ import { getShop, toPublicShopInfo, buildWhatsAppHref } from "@/server/modules/s
 import { getActiveAnnouncement } from "@/server/modules/content";
 import Link from "next/link";
 import { FloatingWhatsApp } from "@/components/public/FloatingWhatsApp";
+import { QrScanTracker } from "@/components/public/QrScanTracker";
 
 export default async function WebsiteLayout({
   children,
@@ -37,6 +38,7 @@ export default async function WebsiteLayout({
       <PublicFooter shop={shop} whatsAppHref={whatsAppHref} />
       
       {/* WhatsApp CTA — uses real shop number from DB */}
+      <QrScanTracker />
       <FloatingWhatsApp href={whatsAppHref} shopName={shop.name} />
     </div>
   );

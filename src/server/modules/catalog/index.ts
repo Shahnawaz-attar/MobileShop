@@ -1,6 +1,6 @@
 import { db } from "@/server/db/client";
 import { z } from "zod";
-import { buildProductSlug } from "@/lib/slug";
+import { buildProductSlug, slugify } from "@/lib/slug";
 import { deleteProductMedia } from "@/server/modules/media";
 import type { Availability, Condition, DeviceType } from "@/types";
 
@@ -502,10 +502,13 @@ export async function createProduct(input: ProductInput) {
   if (parsed.modelId) {
     const model = await db.phoneModel.findUnique({
       where: { id: parsed.modelId },
-      select: { id: true, brandId: true },
+      select: { id: true, brandId: true, deviceType: true },
     });
     if (!model || model.brandId !== parsed.brandId) {
       throw new Error("Model not found for this brand");
+    }
+    if (parsed.deviceType && model.deviceType !== parsed.deviceType) {
+      throw new Error("This model does not match the selected device type");
     }
   }
 
@@ -597,10 +600,13 @@ export async function updateProduct(id: string, input: ProductInput) {
   if (parsed.modelId) {
     const model = await db.phoneModel.findUnique({
       where: { id: parsed.modelId },
-      select: { id: true, brandId: true },
+      select: { id: true, brandId: true, deviceType: true },
     });
     if (!model || model.brandId !== parsed.brandId) {
       throw new Error("Model not found for this brand");
+    }
+    if (parsed.deviceType && model.deviceType !== parsed.deviceType) {
+      throw new Error("This model does not match the selected device type");
     }
   }
 
@@ -815,7 +821,93 @@ export async function listBrands() {
 export async function listModels() {
   const models = await db.phoneModel.findMany({
     orderBy: [{ brandId: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, brandId: true },
+    select: { id: true, name: true, brandId: true, deviceType: true },
   });
   return models;
+}
+
+const createBrandSchema = z.object({
+  name: z.string().trim().min(1, "Brand name is required").max(60, "Brand name is too long"),
+});
+
+const createModelSchema = z.object({
+  brandId: z.string().cuid("Invalid brand"),
+  name: z.string().trim().min(1, "Model name is required").max(80, "Model name is too long"),
+  deviceType: deviceTypeEnum,
+});
+
+/**
+ * Find or create a brand by name. Same slug (e.g. Xiaomi / xiaomi) returns the existing row.
+ */
+export async function createBrand(input: z.infer<typeof createBrandSchema>) {
+  const parsed = createBrandSchema.parse(input);
+  const slug = slugify(parsed.name);
+  if (!slug) {
+    throw new Error("Enter a valid brand name");
+  }
+
+  const existing = await db.brand.findFirst({
+    where: {
+      OR: [
+        { slug },
+        { name: { equals: parsed.name, mode: "insensitive" } },
+      ],
+    },
+    select: { id: true, name: true, slug: true },
+  });
+  if (existing) return existing;
+
+  const last = await db.brand.findFirst({
+    orderBy: { sortOrder: "desc" },
+    select: { sortOrder: true },
+  });
+
+  return db.brand.create({
+    data: {
+      name: parsed.name,
+      slug,
+      sortOrder: (last?.sortOrder ?? 0) + 1,
+    },
+    select: { id: true, name: true, slug: true },
+  });
+}
+
+/**
+ * Find or create a model under a brand for a device type.
+ */
+export async function createModel(input: z.infer<typeof createModelSchema>) {
+  const parsed = createModelSchema.parse(input);
+  const slug = slugify(parsed.name);
+  if (!slug) {
+    throw new Error("Enter a valid model name");
+  }
+
+  const brand = await db.brand.findUnique({
+    where: { id: parsed.brandId },
+    select: { id: true },
+  });
+  if (!brand) {
+    throw new Error("Brand not found");
+  }
+
+  const existing = await db.phoneModel.findUnique({
+    where: { brandId_slug: { brandId: parsed.brandId, slug } },
+    select: { id: true, name: true, brandId: true, deviceType: true },
+  });
+  if (existing) {
+    if (existing.deviceType !== parsed.deviceType) {
+      throw new Error("That model already exists for a different device type");
+    }
+    return existing;
+  }
+
+  return db.phoneModel.create({
+    data: {
+      brandId: parsed.brandId,
+      name: parsed.name,
+      slug,
+      deviceType: parsed.deviceType,
+    },
+    select: { id: true, name: true, brandId: true, deviceType: true },
+  });
 }

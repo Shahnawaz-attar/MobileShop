@@ -122,11 +122,12 @@ mobile-shop-template-1/
 │   │   ├── admin/               # Admin panel (separate layout)
 │   │   │   ├── layout.tsx
 │   │   │   ├── login/page.tsx
-│   │   │   └── (dashboard)/     # Authenticated admin pages
+│   │   │   └── (dashboard)/     # products, shop, content, insights
+│   │   ├── sitemap.ts
+│   │   ├── robots.ts
 │   │   └── api/
 │   │       ├── auth/[...nextauth]/route.ts
-│   │       ├── events/route.ts
-│   │       └── media/sign/route.ts
+│   │       └── og/product/route.tsx  # Share card OG image
 │   ├── components/
 │   │   ├── ui/                  # shadcn/ui primitives
 │   │   ├── public/              # PublicNavbar, PublicFooter
@@ -138,8 +139,9 @@ mobile-shop-template-1/
 │   │   ├── auth/                # Auth config, guards
 │   │   └── modules/
 │   │       ├── catalog/         # Product CRUD + queries + actions
-│   │       ├── shop/            # Shop settings + testimonials
-│   │       ├── media/           # Image upload + management
+│   │       ├── shop/            # Shop settings + logos
+│   │       ├── content/         # Announcements + testimonials
+│   │       ├── media/           # Cloudinary signed upload + attach/reorder/delete
 │   │       ├── analytics/       # Event tracking + summaries
 │   │       └── notify/          # Notification stubs
 │   ├── lib/
@@ -147,6 +149,7 @@ mobile-shop-template-1/
 │   │   ├── money.ts             # INR formatting, paise conversion
 │   │   ├── slug.ts              # Product slug generation
 │   │   ├── whatsapp.ts          # wa.me URL builder
+│   │   ├── image.ts             # Cloudinary delivery URLs
 │   │   ├── utils.ts             # cn() helper
 │   │   └── constants.ts         # App-wide constants
 │   ├── types/
@@ -237,7 +240,6 @@ Do NOT add these unless explicitly required by a future spec:
 - [x] **Dashboard insights** — missing-photos warning, stale 30+ day listings, top-viewed products (spec §12 + §19I/J)
 - [x] Seed includes tablets (iPad, Galaxy Tab) + other device (Apple Watch)
 - [x] **Verified**: `tsc --noEmit` ✅ | `eslint` ✅ | `next build` ✅ | E2E create + mark-sold/undo ✅
-- [ ] **Pending**: Image upload UI (needs Cloudinary config — media module already stubbed in Phase 3)
 
 ### Phase 5 — Product Detail + WhatsApp ✅ COMPLETE
 - [x] Implemented `getPublicProduct` excluding DRAFT products securely.
@@ -270,27 +272,74 @@ Do NOT add these unless explicitly required by a future spec:
 - [x] **Code audit** — Removed dead `PublicLayoutWrapper.tsx`, fixed 7 dummy `href="#"` links, removed non-functional newsletter form, converted all internal `<a>` to Next.js `<Link>` (no page reloads)
 - [x] **Verified**: `tsc --noEmit` ✅ | `eslint` ✅ | `next build` ✅ | Zero dummy links ✅
 
-### Phase 3 — Media Upload ⬜ NOT STARTED
-- [ ] Cloudinary signed upload (sign route `/api/media/sign`)
-- [ ] Image upload UI on product add/edit page
-- [ ] Client-side downscale to ≤1600px
-- [ ] Drag reorder, primary image selection
-- [ ] Image kind labels (FRONT, BACK, SCREEN, etc.)
-- [ ] Max 8 images per product
-- [ ] MIME validation + progress bar + retry
-- [ ] **Blocked on**: Cloudinary API credentials in `.env`
+### Phase 3 — Media Upload ✅ MOSTLY COMPLETE
+- [x] Cloudinary signed upload via server actions (`signUpload` / `signUploadAction`) — no `/api/media/sign` route; client uploads direct to Cloudinary
+- [x] Image upload UI on product edit (`ProductMediaUpload`)
+- [x] Max 8 images per product (enforced in service + UI)
+- [x] Attach + delete (DB row + Cloudinary destroy)
+- [x] Reorder service (`reorderMedia` / `reorderMediaAction`)
+- [x] Shop logo upload (header / footer / dashboard) with old-asset cleanup
+- [ ] Client-side downscale to ≤1600px before upload
+- [ ] Drag-reorder UI + primary image (first in order)
+- [ ] Image kind labels in UI (FRONT, BACK, SCREEN, etc. — schema + sign API exist; UI always uses OTHER)
+- [ ] MIME validation + progress bar + retry on the upload UI
 
-### Phase 8 — Shop Settings + Announcement + Testimonials ⬜ NOT STARTED
-- [ ] Shop settings admin page (logo, name, tagline, phone, WhatsApp, address, hours, maps, social links, trust badges, policies)
-- [ ] `getShop()` / `updateShop()` in shop module
-- [ ] Announcement admin CRUD
-- [ ] Testimonials admin CRUD
-- [ ] Homepage sections pull from Shop DB (currently hardcoded text)
-- [ ] WhatsApp number from Shop settings (currently placeholder in layout)
-- [ ] Store address from Shop DB (currently placeholder)
-- [ ] "Send yourself a WhatsApp test" workflow
+### Phase 8 — Shop Settings + Announcement + Testimonials ✅ COMPLETE
+- [x] Shop settings admin page (`/admin/shop`) — name, tagline, about, phone, WhatsApp, address, hours, maps, social, trust badges, policies
+- [x] `getShop()` / `toPublicShopInfo()` / `updateShopAction()`
+- [x] Logo upload UI (`ShopLogoUpload`) for header, footer, dashboard
+- [x] Announcement + testimonial admin CRUD (`/admin/content`, `src/server/modules/content`)
+- [x] Homepage + layout pull shop data from DB (name, address, hours, policies, logos)
+- [x] WhatsApp number and floating CTA from Shop settings
+- [ ] "Send yourself a WhatsApp test" workflow (still missing)
 
-### Phase 9–14 — See MobileShop.md Section 25
+### Phase 9 — Analytics + Insights ⬜ PARTIAL
+- [x] `recordEvent` + `trackEventAction` (`PRODUCT_VIEW`, `WHATSAPP_CLICK`)
+- [x] Product view tracking on PDP; WhatsApp tap tracking on CTA
+- [x] Dashboard: missing photos, 30+ day stale listings, top-viewed products
+- [x] Dedicated `/admin/analytics` page (`getOwnerInsights`)
+- [x] Owner-facing interest sentences (views + WhatsApp taps per product / week)
+- [x] Week totals for CALL / SEARCH / DIRECTIONS / SHARE / QR (tracking still only on views + WhatsApp)
+- [ ] Crawler filtering + session hashing (spec §23)
+
+### Phase 10 — SEO + OG + Sitemap ⬜ PARTIAL
+- [x] `generateMetadata` on home, browse, product detail (city in title, canonicals)
+- [x] `sitemap.ts` (home, `/phones`, live/reserved products)
+- [x] `robots.ts` (disallow `/admin/` and `/api/`)
+- [x] LocalBusiness JSON-LD on home; Product JSON-LD on PDP
+- [x] Dynamic product OG image (`/api/og/product`)
+- [ ] Public `/about` page (spec §11)
+- [ ] Search Console onboarding docs
+- [ ] JSON-LD `@id` / `url` currently empty strings on home
+
+### Phase 11 — PWA ⬜ PARTIAL (started in Phase 4)
+- [x] `manifest.webmanifest`, SVG icons, `sw.js`, `offline.html`, SW registration
+- [ ] Verify network-first catalogue vs cache-first assets; confirm admin is never cached
+- [ ] Install prompt / “Add to Home Screen” owner guidance
+
+### Phase 12 — QR ✅ COMPLETE
+- [x] Shop QR PNG (`/api/qr.png`, error correction H, `utm_source=qr`)
+- [x] `/admin/qr` — preview, download PNG, print A5, copy link
+- [x] `QR_SCAN` when a visitor lands with `utm_source=qr`
+- [ ] Optional extra variants (packaging sticker) — not needed for V1 counter QR
+
+### Phase 13 — Security + Performance + Docs ⬜ NOT STARTED
+- [ ] Login rate limit (5 / 15 min)
+- [ ] Unit + integration + Playwright journeys (spec §21)
+- [ ] Lighthouse gate on public pages
+- [ ] Deployment / onboarding docs (`docs/01_ONBOARDING.md`, `docs/02_DEPLOYMENT.md`)
+- [ ] Backup/restore process for a paying shop
+
+### Phase 14 — First real shop onboarding ⬜ NOT STARTED
+- [ ] Collect real shop data (spec §20)
+- [ ] Replace demo seed content
+- [ ] Change demo password; verify WhatsApp, Call, maps, hours, SSL, sold flow
+- [ ] Owner can add → photo → publish → share → mark sold in ~90s on Android
+
+### Recommended next (sellable V1)
+1. About page + SEO leftovers (Phase 10)
+2. WhatsApp self-test on shop settings
+3. Tests, rate limit, deployment docs, then first shop (Phases 13–14)
 
 ---
 
@@ -298,6 +347,7 @@ Do NOT add these unless explicitly required by a future spec:
 
 When generating code for this project:
 1. Always check this file first for conventions
+1b. Also follow `.cursor/rules/*.mdc` (especially alwaysApply rules) before writing code — search first, reuse, no extra files
 2. Never introduce dependencies from the Forbidden list
 3. Always use proper TypeScript types — no `any`
 4. Money is always integer paise in the database

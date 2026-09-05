@@ -10,9 +10,9 @@ import { rupeesToPaise } from "@/lib/money";
 import {
   CONDITION_LABELS,
   CONDITION_DESCRIPTIONS,
-  DEVICE_TYPE_LABELS,
 } from "@/lib/constants";
 import { ProductMediaUpload } from "@/components/admin/ProductMediaUpload";
+import { BrandModelPicker } from "@/components/admin/BrandModelPicker";
 import type {
   BrandOption,
   ModelOption,
@@ -36,7 +36,6 @@ const RAM_OPTIONS = [2, 3, 4, 6, 8, 12, 16] as const;
 const CONDITION_OPTIONS: Condition[] = ["LIKE_NEW", "EXCELLENT", "GOOD", "FAIR"];
 const BATTERY_RATING_OPTIONS: BatteryRating[] = ["GOOD", "AVERAGE", "NEEDS_REPLACEMENT"];
 const AVAILABILITY_OPTIONS: Availability[] = ["DRAFT", "AVAILABLE", "RESERVED", "SOLD"];
-const DEVICE_TYPE_OPTIONS: DeviceType[] = ["PHONE", "TABLET", "OTHER"];
 
 /** Price sanity threshold — warn if price is an outlier (very high) */
 const PRICE_WARN_PAISE = 200_000_00; // ₹2,00,000
@@ -52,6 +51,8 @@ export function ProductForm({ brands, models, product }: ProductFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   // Form state
+  const [brandList, setBrandList] = useState(brands);
+  const [modelList, setModelList] = useState(models);
   const [brandId, setBrandId] = useState(product?.brandId ?? "");
   const [modelId, setModelId] = useState(product?.modelId ?? "");
   const [title, setTitle] = useState(product?.title ?? "");
@@ -85,8 +86,6 @@ export function ProductForm({ brands, models, product }: ProductFormProps) {
   const [availability, setAvailability] = useState<Availability>(
     product?.availability ?? "DRAFT"
   );
-
-  const filteredModels = models.filter((m) => m.brandId === brandId);
 
   const pricePaise = priceRupees ? rupeesToPaise(Number(priceRupees)) : 0;
   const mrpPaise = mrpRupees ? rupeesToPaise(Number(mrpRupees)) : null;
@@ -193,74 +192,29 @@ export function ProductForm({ brands, models, product }: ProductFormProps) {
         </p>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {/* Device type */}
-          <div className="space-y-2 sm:col-span-2">
-            <label htmlFor="deviceType" className={labelClass}>
-              Device type <span className="text-destructive">*</span>
-            </label>
-            <select
-              id="deviceType"
-              value={deviceType}
-              onChange={(e) => setDeviceType(e.target.value as DeviceType)}
-              required
-              className={inputClass}
-            >
-              {DEVICE_TYPE_OPTIONS.map((d) => (
-                <option key={d} value={d}>
-                  {DEVICE_TYPE_LABELS[d]}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-muted-foreground">
-              Phones and tablets share battery, storage, and RAM details. Other
-              devices (watches, earbuds, etc.) only need the basics.
-            </p>
-          </div>
-
-          {/* Brand */}
-          <div className="space-y-2">
-            <label htmlFor="brand" className={labelClass}>
-              Brand <span className="text-destructive">*</span>
-            </label>
-            <select
-              id="brand"
-              value={brandId}
-              onChange={(e) => {
-                setBrandId(e.target.value);
-                setModelId("");
-              }}
-              required
-              className={inputClass}
-            >
-              <option value="">Select brand</option>
-              {brands.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Model */}
-          <div className="space-y-2">
-            <label htmlFor="model" className={labelClass}>
-              Model
-            </label>
-            <select
-              id="model"
-              value={modelId}
-              onChange={(e) => setModelId(e.target.value)}
-              disabled={!brandId}
-              className={inputClass}
-            >
-              <option value="">Select model</option>
-              {filteredModels.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <BrandModelPicker
+            deviceType={deviceType}
+            brandId={brandId}
+            modelId={modelId}
+            brands={brandList}
+            models={modelList}
+            onDeviceTypeChange={setDeviceType}
+            onBrandIdChange={setBrandId}
+            onModelIdChange={setModelId}
+            onBrandCreated={(brand) => {
+              setBrandList((prev) =>
+                prev.some((b) => b.id === brand.id) ? prev : [...prev, brand]
+              );
+            }}
+            onModelCreated={(model) => {
+              setModelList((prev) =>
+                prev.some((m) => m.id === model.id) ? prev : [...prev, model]
+              );
+            }}
+            onSuggestTitle={(name) => {
+              setTitle((current) => (current.trim() ? current : name));
+            }}
+          />
 
           {/* Title */}
           <div className="space-y-2 sm:col-span-2">

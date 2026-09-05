@@ -1,0 +1,17 @@
+---
+description: Change only what was asked. Reuse existing code. Avoid extra files.
+alwaysApply: true
+---
+
+# Minimal change
+
+- Search the repo first. Extend existing modules and components. Do not create a new file, hook, util, or dependency unless nothing existing can do the job.
+- Touch only files required for the request. No drive-by refactors, extra comments, or README/AGENTS updates unless asked (except Progress Tracker when a phase item actually finishes).
+- Public UI: `src/components/public`, `shared`, `ui`. Admin: `src/components/admin`. Logic: `src/server/modules/*`. Pages stay thin: parse → authorize → service → format.
+- If a similar flow exists (list, form, action, DTO), copy that pattern. Do not add a second way to do the same thing.
+- Before adding anything: grep for the function or component. If it exists, use it.
+
+```text
+❌ New AnalyticsChart.tsx + recharts for one insights page
+✅ Server Component that calls getOwnerInsights() and lists sentences
+```

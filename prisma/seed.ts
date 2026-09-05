@@ -133,20 +133,21 @@ async function main() {
     { brandSlug: "motorola", name: "Moto G84", slug: "moto-g84", releaseYear: 2023 },
     { brandSlug: "google", name: "Pixel 8 Pro", slug: "pixel-8-pro", releaseYear: 2023 },
     { brandSlug: "google", name: "Pixel 8a", slug: "pixel-8a", releaseYear: 2024 },
-    { brandSlug: "apple", name: "iPad 10th Gen", slug: "ipad-10th-gen", releaseYear: 2022 },
-    { brandSlug: "apple", name: "iPad Air 5", slug: "ipad-air-5", releaseYear: 2022 },
-    { brandSlug: "samsung", name: "Galaxy Tab S9", slug: "galaxy-tab-s9", releaseYear: 2023 },
-    { brandSlug: "samsung", name: "Galaxy Tab A9+", slug: "galaxy-tab-a9-plus", releaseYear: 2023 },
+    { brandSlug: "apple", name: "iPad 10th Gen", slug: "ipad-10th-gen", releaseYear: 2022, deviceType: "TABLET" as const },
+    { brandSlug: "apple", name: "iPad Air 5", slug: "ipad-air-5", releaseYear: 2022, deviceType: "TABLET" as const },
+    { brandSlug: "samsung", name: "Galaxy Tab S9", slug: "galaxy-tab-s9", releaseYear: 2023, deviceType: "TABLET" as const },
+    { brandSlug: "samsung", name: "Galaxy Tab A9+", slug: "galaxy-tab-a9-plus", releaseYear: 2023, deviceType: "TABLET" as const },
   ];
 
   const models: Record<string, string> = {};
   for (const m of modelsData) {
     const brandId = brands[m.brandSlug];
     if (!brandId) continue;
+    const deviceType = "deviceType" in m ? m.deviceType : "PHONE";
     const model = await prisma.phoneModel.upsert({
       where: { brandId_slug: { brandId, slug: m.slug } },
-      update: {},
-      create: { brandId, name: m.name, slug: m.slug, releaseYear: m.releaseYear },
+      update: { deviceType },
+      create: { brandId, name: m.name, slug: m.slug, releaseYear: m.releaseYear, deviceType },
     });
     models[m.slug] = model.id;
   }

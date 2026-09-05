@@ -9,13 +9,15 @@ import {
   duplicateProduct,
   listAdminProducts,
   listPublicProducts,
+  createBrand,
+  createModel,
   type ProductInput,
   type PublicFilters,
 } from "@/server/modules/catalog";
 import { formatINR } from "@/lib/money";
 import { AVAILABILITY_LABELS, CONDITION_LABELS, DEVICE_TYPE_LABELS } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
-import type { ActionResult, Availability } from "@/types";
+import type { ActionResult, Availability, BrandOption, DeviceType, ModelOption } from "@/types";
 
 /**
  * Catalog Server Actions — thin wrappers over catalog services.
@@ -174,6 +176,40 @@ export async function duplicateProductAction(
       success: false,
       error: error instanceof Error ? error.message : "Failed to duplicate product",
       code: "INTERNAL",
+    };
+  }
+}
+
+export async function createBrandAction(
+  name: string
+): Promise<ActionResult<BrandOption>> {
+  try {
+    await requireOwner();
+    const brand = await createBrand({ name });
+    revalidatePath("/admin/products");
+    return { success: true, data: brand };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to add brand",
+      code: "VALIDATION_ERROR",
+    };
+  }
+}
+
+export async function createModelAction(
+  input: { brandId: string; name: string; deviceType: DeviceType }
+): Promise<ActionResult<ModelOption>> {
+  try {
+    await requireOwner();
+    const model = await createModel(input);
+    revalidatePath("/admin/products");
+    return { success: true, data: model };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to add model",
+      code: "VALIDATION_ERROR",
     };
   }
 }

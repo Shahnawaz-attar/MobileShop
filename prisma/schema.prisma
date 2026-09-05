@@ -140,12 +140,13 @@ model Brand {
   products Product[]
 }
 
-/// Specific phone model (iPhone 15, Galaxy S24, etc.)
+/// Catalogue model under a brand, scoped by device kind (iPhone vs iPad vs Watch).
 model PhoneModel {
-  id          String @id @default(cuid())
+  id          String     @id @default(cuid())
   brandId     String
   name        String
   slug        String
+  deviceType  DeviceType @default(PHONE)
   releaseYear Int?
   specs       Json?
 
@@ -154,6 +155,7 @@ model PhoneModel {
 
   @@unique([brandId, slug])
   @@index([brandId])
+  @@index([brandId, deviceType])
 }
 
 /// A pre-owned device listing — the core business entity.
