@@ -35,8 +35,19 @@ const clientEnvSchema = z.object({
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
 
+/** Vercel injects VERCEL_URL at build; custom domain still belongs in NEXT_PUBLIC_APP_URL. */
+function resolveAppUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+  if (fromEnv) return fromEnv;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "";
+}
+
 function validateEnv(): ServerEnv {
-  const result = serverEnvSchema.safeParse(process.env);
+  const result = serverEnvSchema.safeParse({
+    ...process.env,
+    NEXT_PUBLIC_APP_URL: resolveAppUrl(),
+  });
 
   if (!result.success) {
     const formatted = result.error.issues
@@ -62,7 +73,7 @@ export const env = validateEnv();
  * Only includes NEXT_PUBLIC_ prefixed variables.
  */
 export const clientEnv: ClientEnv = clientEnvSchema.parse({
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? "",
+  NEXT_PUBLIC_APP_URL: resolveAppUrl(),
   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
 });
