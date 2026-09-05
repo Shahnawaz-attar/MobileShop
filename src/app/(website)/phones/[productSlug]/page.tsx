@@ -8,6 +8,7 @@ import { buildWhatsAppLink, generateProductEnquiryText, generateProductShareText
 import { resolvePublicAppUrl } from "@/lib/qr";
 import { ProductGallery } from "./ProductGallery";
 import { ProductShareBar } from "@/components/public/ProductShareBar";
+import { ProductEngagement } from "@/components/public/ProductEngagement";
 import { ProductViewTracker } from "./ProductViewTracker";
 import { FadeIn } from "@/components/shared/FadeIn";
 
@@ -176,6 +177,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 </div>
               )}
             </div>
+
+            <ProductEngagement
+              publishedAt={product.publishedAt}
+              viewCount={product.viewCount}
+              whatsappClicksWeek={product.whatsappClicksWeek}
+            />
 
             {/* Key Specifications Grid */}
             <div className="mt-10">

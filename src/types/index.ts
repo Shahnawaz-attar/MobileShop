@@ -53,6 +53,7 @@ export interface PublicProductCard {
   availability: Availability;
   isFeatured: boolean;
   publishedAt: Date | null;
+  viewCount?: number;
   primaryImageUrl: string | null;
   primaryImageAlt: string | null;
   brandName: string;

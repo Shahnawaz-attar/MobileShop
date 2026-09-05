@@ -1,8 +1,17 @@
+import { createHash } from "node:crypto";
 import { db } from "@/server/db/client";
 import { EventType } from "@prisma/client";
+import { env } from "@/lib/env";
 import type { OwnerInsights, ProductInterestRow } from "@/types";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Daily salted hash — one view per visitor per product per day (spec §23). */
+export function buildDailySessionHash(visitorId: string): string {
+  const salt = env.ANALYTICS_SALT ?? env.AUTH_SECRET;
+  const day = new Date().toISOString().slice(0, 10);
+  return createHash("sha256").update(`${salt}:${day}:${visitorId}`).digest("hex");
+}
 
 /**
  * Record an analytics event (e.g. PRODUCT_VIEW, WHATSAPP_CLICK)
@@ -14,10 +23,24 @@ export async function recordEvent(input: {
   meta?: Record<string, unknown>;
   sessionHash?: string;
 }) {
-  // We wrap this in a transaction if we need to update viewCount
-  // Alternatively, just fire and forget if we don't want to block
-  
   if (input.type === "PRODUCT_VIEW" && input.productId) {
+    if (!input.sessionHash) {
+      return;
+    }
+
+    const alreadyViewed = await db.analyticsEvent.findFirst({
+      where: {
+        type: "PRODUCT_VIEW",
+        productId: input.productId,
+        sessionHash: input.sessionHash,
+      },
+      select: { id: true },
+    });
+
+    if (alreadyViewed) {
+      return;
+    }
+
     await db.$transaction([
       db.analyticsEvent.create({
         data: {

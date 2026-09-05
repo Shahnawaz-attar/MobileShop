@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatINR } from "@/lib/money";
 import { CONDITION_LABELS } from "@/lib/constants";
+import { ProductEngagement } from "@/components/public/ProductEngagement";
+import { formatListedAgo, formatPublishedDate } from "@/lib/time-ago";
 import type { Condition, Availability } from "@/types";
 
 interface PublicProductCardProps {
@@ -15,6 +17,8 @@ interface PublicProductCardProps {
     condition: Condition;
     availability: Availability;
     isFeatured: boolean;
+    publishedAt?: Date | null;
+    viewCount?: number;
     primaryImageUrl: string | null;
     primaryImageAlt: string | null;
     storageGb?: number | null;
@@ -24,6 +28,8 @@ interface PublicProductCardProps {
 }
 
 export function PublicProductCard({ product, priority = false }: PublicProductCardProps) {
+  const publishedDate = formatPublishedDate(product.publishedAt ?? null);
+  const listedAgo = formatListedAgo(product.publishedAt ?? null);
   const discount =
     product.mrpPaise && product.mrpPaise > product.pricePaise
       ? Math.round(((product.mrpPaise - product.pricePaise) / product.mrpPaise) * 100)
@@ -69,6 +75,13 @@ export function PublicProductCard({ product, priority = false }: PublicProductCa
             </span>
           )}
         </div>
+
+        <ProductEngagement
+          publishedAt={product.publishedAt ?? null}
+          viewCount={product.viewCount ?? 0}
+          whatsappClicksWeek={0}
+          variant="card"
+        />
       </div>
 
       {/* Content */}
@@ -92,6 +105,13 @@ export function PublicProductCard({ product, priority = false }: PublicProductCa
           {product.storageGb && product.ramGb && <span className="text-slate-300">•</span>}
           {product.ramGb && <span>{product.ramGb}GB RAM</span>}
         </div>
+
+        {publishedDate && (
+          <p className="mt-3 text-xs font-semibold text-slate-500">
+            Listed {publishedDate}
+            {listedAgo ? <span className="text-slate-400"> · {listedAgo}</span> : null}
+          </p>
+        )}
 
         <div className="mt-auto pt-8">
           <div className="flex items-center gap-3">

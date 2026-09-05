@@ -7,15 +7,33 @@ interface ProductViewTrackerProps {
   productId: string;
 }
 
+const VISITOR_KEY = "ms_vid";
+
+function getVisitorId(): string {
+  let id = localStorage.getItem(VISITOR_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(VISITOR_KEY, id);
+  }
+  return id;
+}
+
 export function ProductViewTracker({ productId }: ProductViewTrackerProps) {
   const tracked = useRef(false);
 
   useEffect(() => {
-    // Only track once per component mount (strict mode double-mount safe)
-    if (!tracked.current) {
-      tracked.current = true;
-      trackEventAction({ type: "PRODUCT_VIEW", productId });
-    }
+    if (tracked.current) return;
+    tracked.current = true;
+
+    const tabKey = `ms_pv_${productId}`;
+    if (sessionStorage.getItem(tabKey)) return;
+    sessionStorage.setItem(tabKey, "1");
+
+    void trackEventAction({
+      type: "PRODUCT_VIEW",
+      productId,
+      visitorId: getVisitorId(),
+    });
   }, [productId]);
 
   return null;

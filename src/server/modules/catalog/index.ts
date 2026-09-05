@@ -290,6 +290,8 @@ export async function listPublicProducts(filters: PublicFilters = {}) {
         condition: true,
         availability: true,
         isFeatured: true,
+        publishedAt: true,
+        viewCount: true,
         brand: { select: { name: true } },
         media: {
           orderBy: { sortOrder: "asc" },
@@ -317,6 +319,8 @@ export async function listPublicProducts(filters: PublicFilters = {}) {
       condition: p.condition,
       availability: p.availability,
       isFeatured: p.isFeatured,
+      publishedAt: p.publishedAt,
+      viewCount: p.viewCount,
       brandName: p.brand.name,
       primaryImageUrl: p.media[0]?.url ?? null,
       primaryImageAlt: p.media[0]?.alt ?? null,
@@ -463,6 +467,8 @@ export async function getPublicProduct(slug: string) {
       description: true,
       availability: true,
       isFeatured: true,
+      publishedAt: true,
+      viewCount: true,
       brand: { select: { name: true } },
       model: { select: { name: true } },
       media: {
@@ -483,7 +489,16 @@ export async function getPublicProduct(slug: string) {
     return null;
   }
 
-  return product;
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const whatsappClicksWeek = await db.analyticsEvent.count({
+    where: {
+      productId: product.id,
+      type: "WHATSAPP_CLICK",
+      createdAt: { gte: weekAgo },
+    },
+  });
+
+  return { ...product, whatsappClicksWeek };
 }
 
 /**
