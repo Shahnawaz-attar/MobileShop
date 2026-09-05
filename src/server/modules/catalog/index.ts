@@ -150,19 +150,23 @@ async function generateUniqueSlug(input: {
 export async function listAdminProducts(filters: AdminFilters = {}) {
   const parsed = adminFiltersSchema.parse(filters);
 
-  const where: {
-    availability?: Availability;
-    OR?: { title?: { contains: string; mode: "insensitive" }; searchText?: { contains: string } }[];
-  } = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: any = {};
 
   if (parsed.availability) {
     where.availability = parsed.availability;
   }
 
   if (parsed.q) {
+    const q = parsed.q;
     where.OR = [
-      { title: { contains: parsed.q, mode: "insensitive" } },
-      { searchText: { contains: parsed.q.toLowerCase() } },
+      { title: { contains: q, mode: "insensitive" } },
+      { brand: { name: { contains: q, mode: "insensitive" } } },
+      { model: { name: { contains: q, mode: "insensitive" } } },
+      { searchText: { contains: q.toLowerCase() } },
+      { description: { contains: q, mode: "insensitive" } },
+      { conditionNotes: { contains: q, mode: "insensitive" } },
+      { internalNotes: { contains: q, mode: "insensitive" } },
     ];
   }
 
@@ -247,9 +251,19 @@ export async function listPublicProducts(filters: PublicFilters = {}) {
   };
 
   if (parsed.q) {
+    const q = parsed.q;
     where.OR = [
-      { title: { contains: parsed.q, mode: "insensitive" } },
-      { searchText: { contains: parsed.q.toLowerCase() } },
+      // Title first (most relevant)
+      { title: { contains: q, mode: "insensitive" } },
+      // Brand name (e.g. "apple" matches all Apple devices)
+      { brand: { name: { contains: q, mode: "insensitive" } } },
+      // Model name (e.g. "iPhone 13", "Galaxy S24")
+      { model: { name: { contains: q, mode: "insensitive" } } },
+      // Full-text search blob (title + specs + colour + condition)
+      { searchText: { contains: q.toLowerCase() } },
+      // Description / condition notes
+      { description: { contains: q, mode: "insensitive" } },
+      { conditionNotes: { contains: q, mode: "insensitive" } },
     ];
   }
 
