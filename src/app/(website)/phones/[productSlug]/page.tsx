@@ -12,6 +12,7 @@ import { ProductEngagement } from "@/components/public/ProductEngagement";
 import { ProductTrustProof } from "@/components/public/ProductTrustProof";
 import { ProductViewTracker } from "./ProductViewTracker";
 import { FadeIn } from "@/components/shared/FadeIn";
+import { ogSafeCloudinaryUrl } from "@/lib/image";
 
 interface PageProps {
   params: Promise<{ productSlug: string }>;
@@ -30,7 +31,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = `Buy pre-owned ${fullName} in ${CONDITION_LABELS[product.condition].toLowerCase()} condition.`;
 
   const primaryMedia = product.media.find(m => m.kind === "FRONT") || product.media[0];
-  const ogImageUrl = `/api/og/product?title=${encodeURIComponent(fullName)}&price=${product.pricePaise / 100}${primaryMedia ? `&image=${encodeURIComponent(primaryMedia.url)}` : ""}`;
+  const ogImageUrl = `/api/og/product?title=${encodeURIComponent(fullName)}&price=${product.pricePaise / 100}${
+    primaryMedia
+      ? `&image=${encodeURIComponent(ogSafeCloudinaryUrl(primaryMedia.url))}&imageW=${primaryMedia.width ?? 800}&imageH=${primaryMedia.height ?? 800}`
+      : ""
+  }`;
 
   return {
     title: fullName,
@@ -90,7 +95,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const primaryMedia = product.media.find(m => m.kind === "FRONT") || product.media[0];
   const variantStr = [product.storageGb ? `${product.storageGb}GB` : null, product.colour].filter(Boolean).join(" ");
   const fullName = variantStr ? `${product.title} (${variantStr})` : product.title;
-  const statusImageUrl = `/api/og/product?title=${encodeURIComponent(fullName)}&price=${product.pricePaise / 100}${primaryMedia ? `&image=${encodeURIComponent(primaryMedia.url)}` : ""}`;
+  const statusImageUrl = `/api/og/product?variant=status&title=${encodeURIComponent(fullName)}&price=${product.pricePaise / 100}&shop=${encodeURIComponent(shop.name)}${
+    primaryMedia
+      ? `&image=${encodeURIComponent(ogSafeCloudinaryUrl(primaryMedia.url))}&imageW=${primaryMedia.width ?? 800}&imageH=${primaryMedia.height ?? 800}`
+      : ""
+  }`;
   
   // JSON-LD Structured Data for Product
   const jsonLd = {
@@ -203,9 +212,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
             )}
 
             <ProductTrustProof
-              deviceType={product.deviceType}
               hasBill={product.hasBill}
               purchasedAt={product.purchasedAt}
+              billUrl={product.billUrl}
             />
 
             {/* Key Specifications Grid */}

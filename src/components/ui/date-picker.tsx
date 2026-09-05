@@ -53,8 +53,8 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date", class
 
   return (
     <>
-      {/* Desktop Popover (hidden on mobile) */}
-      <div className="hidden sm:block">
+      {/* Desktop Popover (lg+ only — admin mobile uses drawer below) */}
+      <div className="hidden lg:block">
         <Popover>
           <PopoverTrigger className={buttonClass}>
             {buttonContent}
@@ -69,8 +69,8 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date", class
         </Popover>
       </div>
 
-      {/* Mobile Button Trigger (hidden on desktop) */}
-      <div className="block sm:hidden">
+      {/* Mobile / tablet bottom sheet (matches admin mobile nav breakpoint) */}
+      <div className="lg:hidden">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
@@ -80,9 +80,8 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date", class
         </button>
       </div>
 
-      {/* Mobile Modal Drawer (hidden on desktop) */}
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:hidden">
+        <div className="fixed inset-0 z-[200] flex items-end lg:hidden">
           {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity animate-in fade-in-0" 
@@ -90,7 +89,7 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date", class
           />
           
           {/* Modal Content */}
-          <div className="relative z-[101] w-full rounded-t-2xl border-t border-border bg-card p-6 shadow-lg pb-10 animate-in slide-in-from-bottom-full flex flex-col items-center">
+          <div className="relative z-[201] w-full rounded-t-2xl border-t border-border bg-card p-6 shadow-lg pb-[max(2.5rem,env(safe-area-inset-bottom))] animate-in slide-in-from-bottom-full flex flex-col items-center">
             <div className="w-full flex justify-between items-center mb-4 px-2">
               <h2 className="text-lg font-semibold text-foreground">Select Date</h2>
               <button 

@@ -98,6 +98,7 @@ export async function updateProductAction(
     const product = await updateProduct(id, input);
     revalidatePath("/admin/products");
     revalidatePath(`/admin/products/${id}/edit`);
+    revalidatePath(`/phones/${product.slug}`);
     return { success: true, data: product };
   } catch (error) {
     if (error instanceof Error && error.message === "Product not found") {

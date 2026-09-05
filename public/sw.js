@@ -8,7 +8,7 @@
  * - Admin → NEVER cache
  */
 
-const CACHE_NAME = "mobileshop-v6";
+const CACHE_NAME = "mobileshop-v8";
 const STATIC_ASSETS = [
   "/",
   "/offline.html",
@@ -64,9 +64,16 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets (JS/CSS/fonts/icons) — cache-first
+  // Next.js chunks — network-first (cache-first caused stale module errors after deploy/dev)
+  if (url.pathname.startsWith("/_next/")) {
+    event.respondWith(
+      fetch(request).catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Icons / manifest / offline shell — cache-first
   if (
-    url.pathname.startsWith("/_next/") ||
     url.pathname.startsWith("/icons/") ||
     url.pathname === "/manifest.webmanifest" ||
     url.pathname === "/offline.html"

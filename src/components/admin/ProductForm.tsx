@@ -12,9 +12,11 @@ import {
   CONDITION_DESCRIPTIONS,
 } from "@/lib/constants";
 import { ProductMediaUpload } from "@/components/admin/ProductMediaUpload";
+import { ProductBillUpload } from "@/components/admin/ProductBillUpload";
 import { BrandModelPicker } from "@/components/admin/BrandModelPicker";
 import { ProductPublishSuccess } from "@/components/admin/ProductPublishSuccess";
-import { formatDateInput } from "@/lib/time-ago";
+import { MonthYearPicker } from "@/components/ui/month-year-picker";
+import { normalizeBillMonth } from "@/lib/bill-date";
 import type {
   BrandOption,
   ModelOption,
@@ -94,7 +96,9 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
   const [hasCharger, setHasCharger] = useState(product?.hasCharger ?? false);
   const [hasCable, setHasCable] = useState(product?.hasCable ?? false);
   const [hasBill, setHasBill] = useState(product?.hasBill ?? false);
-  const [purchasedAt, setPurchasedAt] = useState(() => formatDateInput(product?.purchasedAt));
+  const [purchasedAt, setPurchasedAt] = useState<Date | undefined>(() =>
+    product?.purchasedAt ? normalizeBillMonth(new Date(product.purchasedAt)) : undefined
+  );
   const [description, setDescription] = useState(product?.description ?? "");
   const [internalNotes, setInternalNotes] = useState(product?.internalNotes ?? "");
   const [availability, setAvailability] = useState<Availability>(
@@ -137,11 +141,9 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
       hasBox,
       hasCharger,
       hasCable,
-      hasBill: deviceType === "PHONE" || deviceType === "TABLET" ? hasBill : false,
-      purchasedAt:
-        (deviceType === "PHONE" || deviceType === "TABLET") && purchasedAt
-          ? new Date(`${purchasedAt}T12:00:00`)
-          : null,
+      // Stored for all device types; shown on the public product page when hasBill is checked.
+      hasBill,
+      purchasedAt: purchasedAt ? normalizeBillMonth(purchasedAt) : null,
       description: description.trim() || null,
       availability,
       internalNotes: internalNotes.trim() || null,
@@ -157,7 +159,10 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
         if (!product) {
           router.push(`/admin/products/${result.data.id}/edit`);
           router.refresh();
-        } else if (availability === "AVAILABLE") {
+        } else if (
+          availability === "AVAILABLE" &&
+          product.availability !== "AVAILABLE"
+        ) {
           setPublishSuccess({
             slug: result.data.slug,
             title: result.data.title,
@@ -166,8 +171,11 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
             colour: colour.trim() || null,
             condition,
           });
-        } else {
+          router.refresh();
+        } else if (availability !== "AVAILABLE") {
           router.push("/admin/products");
+          router.refresh();
+        } else {
           router.refresh();
         }
       } else {
@@ -510,19 +518,15 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
       <section className={sectionClass}>
         <h2 className="text-base font-semibold text-foreground">Bill &amp; device age</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          For phones and tablets — shown on the website only when bill is confirmed. Ignored for watches and other devices.
+          Shown on the website when &ldquo;Original bill available&rdquo; is checked. PDF upload is optional.
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <label htmlFor="purchasedAt" className={labelClass}>
-              Original bill date
-            </label>
-            <input
-              id="purchasedAt"
-              type="date"
+            <span className={labelClass}>Original bill month</span>
+            <MonthYearPicker
               value={purchasedAt}
-              onChange={(e) => setPurchasedAt(e.target.value)}
-              className={inputClass}
+              onChange={setPurchasedAt}
+              placeholder="Pick bill month & year"
             />
           </div>
           <div className="flex items-end">
@@ -536,6 +540,20 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
               Original bill available (show on website)
             </label>
           </div>
+        </div>
+
+        <div className="mt-4">
+          {product ? (
+            <ProductBillUpload
+              productId={product.id}
+              initialBillUrl={product.billUrl ?? null}
+              initialBillPublicId={product.billPublicId ?? null}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Save the device first, then you can upload a bill scan (PDF or PNG).
+            </p>
+          )}
         </div>
       </section>
 

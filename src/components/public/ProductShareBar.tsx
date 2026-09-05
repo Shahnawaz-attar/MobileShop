@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { trackEventAction } from "@/server/modules/analytics/actions";
+import { useState } from "react";
+import { trackEvent } from "@/lib/track-event";
 
 interface ProductShareBarProps {
   productId: string;
@@ -22,12 +22,9 @@ export function ProductShareBar({
   mode = "all",
 }: ProductShareBarProps) {
   const [copied, setCopied] = useState(false);
-  const [, startTransition] = useTransition();
 
   function trackShare() {
-    startTransition(() => {
-      void trackEventAction({ type: "SHARE_CLICK", productId });
-    });
+    trackEvent({ type: "SHARE_CLICK", productId });
   }
 
   async function copyLink() {
@@ -45,13 +42,11 @@ export function ProductShareBar({
       {showWhatsApp && (
         <a
           href={whatsappUrl}
-          onClick={(e) => {
-            e.preventDefault();
-            startTransition(() => {
-              void trackEventAction({ type: "WHATSAPP_CLICK", productId });
-            });
-            window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-          }}
+            onClick={(e) => {
+              e.preventDefault();
+              trackEvent({ type: "WHATSAPP_CLICK", productId });
+              window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+            }}
           className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 text-base font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-95"
         >
           Enquire on WhatsApp
@@ -80,6 +75,7 @@ export function ProductShareBar({
           {statusImageUrl && (
             <a
               href={statusImageUrl}
+              download={`${productUrl.split("/").pop() ?? "listing"}-status.png`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={trackShare}

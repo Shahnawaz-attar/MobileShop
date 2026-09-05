@@ -1,9 +1,11 @@
 import { db } from "@/server/db/client";
+import { normalizeBillMonth } from "@/lib/bill-date";
 import { notifyProductListed } from "@/server/modules/notify";
-import { z } from "zod";
+import { resolveBillViewUrl, isPdfBillUrl } from "@/lib/image";
 import { buildProductSlug, slugify } from "@/lib/slug";
 import { deleteProductMedia } from "@/server/modules/media";
 import type { Availability, Condition, DeviceType } from "@/types";
+import { z } from "zod";
 
 /**
  * Catalog module — Product CRUD, queries, and search.
@@ -420,6 +422,8 @@ export async function getAdminProduct(id: string) {
       deviceRefLast4: true,
       purchasedAt: true,
       hasBill: true,
+      billUrl: true,
+      billPublicId: true,
       media: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -475,6 +479,8 @@ export async function getPublicProduct(slug: string) {
       viewCount: true,
       hasBill: true,
       purchasedAt: true,
+      billUrl: true,
+      billPublicId: true,
       brand: { select: { name: true } },
       model: { select: { name: true } },
       media: {
@@ -508,6 +514,15 @@ export async function getPublicProduct(slug: string) {
     ...product,
     whatsappClicksWeek,
     purchasedAt: product.hasBill ? product.purchasedAt : null,
+    billUrl:
+      product.hasBill &&
+      product.billUrl &&
+      product.billPublicId &&
+      !product.billUrl.includes("/raw/upload/")
+        ? resolveBillViewUrl(product.billPublicId, product.billUrl)
+        : product.hasBill && product.billUrl && !product.billUrl.includes("/raw/upload/") && !isPdfBillUrl(product.billUrl)
+          ? product.billUrl
+          : null,
   };
 }
 
@@ -593,7 +608,7 @@ export async function createProduct(input: ProductInput) {
       soldAt,
       internalNotes: parsed.internalNotes ?? null,
       deviceRefLast4: parsed.deviceRefLast4 ?? null,
-      purchasedAt: parsed.purchasedAt ?? null,
+      purchasedAt: parsed.purchasedAt ? normalizeBillMonth(parsed.purchasedAt) : null,
       hasBill: parsed.hasBill ?? false,
       searchText,
     },
@@ -700,7 +715,7 @@ export async function updateProduct(id: string, input: ProductInput) {
       soldAt,
       internalNotes: parsed.internalNotes ?? null,
       deviceRefLast4: parsed.deviceRefLast4 ?? null,
-      purchasedAt: parsed.purchasedAt ?? null,
+      purchasedAt: parsed.purchasedAt ? normalizeBillMonth(parsed.purchasedAt) : null,
       hasBill: parsed.hasBill ?? false,
       searchText,
     },

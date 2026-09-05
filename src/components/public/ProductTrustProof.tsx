@@ -1,15 +1,44 @@
-import { Calendar, FileCheck } from "lucide-react";
+import { Calendar, FileCheck, ShieldCheck } from "lucide-react";
 import { formatBillMonth, formatDeviceAge } from "@/lib/time-ago";
-import type { DeviceType } from "@/types";
+import { ProductBillViewButton } from "@/components/public/ProductBillViewButton";
+import { cn } from "@/lib/utils";
 
 interface ProductTrustProofProps {
-  deviceType: DeviceType;
   hasBill: boolean;
   purchasedAt: Date | null;
+  billUrl?: string | null;
 }
 
-export function ProductTrustProof({ deviceType, hasBill, purchasedAt }: ProductTrustProofProps) {
-  if (!hasBill || (deviceType !== "PHONE" && deviceType !== "TABLET")) {
+function TrustRow({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: typeof FileCheck;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-emerald-100/80 bg-white/80 p-3.5 shadow-[0_2px_12px_rgb(16,185,129,0.06)]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+        <Icon className="h-5 w-5" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <p className="text-sm font-bold leading-snug text-slate-900">{title}</p>
+        {subtitle ? (
+          <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500">{subtitle}</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+export function ProductTrustProof({
+  hasBill,
+  purchasedAt,
+  billUrl,
+}: ProductTrustProofProps) {
+  if (!hasBill) {
     return null;
   }
 
@@ -17,31 +46,55 @@ export function ProductTrustProof({ deviceType, hasBill, purchasedAt }: ProductT
   const billMonth = formatBillMonth(purchasedAt);
 
   return (
-    <div className="mt-6 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-4 shadow-[0_4px_20px_rgb(0,0,0,0.03)]">
-      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700/80 mb-3">
-        Trust &amp; documentation
-      </p>
-      <ul className="space-y-2">
-        <li className="flex items-start gap-2 text-sm font-semibold text-slate-800">
-          <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-          Original purchase bill available at shop
-        </li>
+    <section
+      className={cn(
+        "mt-6 overflow-hidden rounded-2xl border border-emerald-200/80",
+        "bg-gradient-to-br from-emerald-50/90 via-white to-white p-4 sm:p-5",
+        "shadow-[0_4px_20px_rgb(0,0,0,0.03)]"
+      )}
+      aria-label="Trust and documentation"
+    >
+      <div className="mb-4 flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm">
+          <ShieldCheck className="h-4 w-4" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700/90">
+            Trust &amp; documentation
+          </p>
+          <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500 sm:text-sm">
+            Owner confirmed original purchase details for this device.
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2.5">
+        <TrustRow
+          icon={FileCheck}
+          title="Original bill available"
+          subtitle="Ask at the shop or view the uploaded bill below."
+        />
+
         {deviceAge && billMonth ? (
-          <li className="flex items-start gap-2 text-sm font-semibold text-slate-800">
-            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-            Device age ~{deviceAge}
-            <span className="font-medium text-slate-500">(bill dated {billMonth})</span>
-          </li>
+          <TrustRow
+            icon={Calendar}
+            title={`Device age ~${deviceAge}`}
+            subtitle={`Bill month: ${billMonth}`}
+          />
         ) : (
-          <li className="flex items-start gap-2 text-sm font-medium text-slate-600">
-            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-            Ask the shop for bill date and device age details
-          </li>
+          <TrustRow
+            icon={Calendar}
+            title="Bill month on request"
+            subtitle="Contact the shop for purchase date details."
+          />
         )}
-      </ul>
-      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-        Shown only when the owner confirms an original bill. Useful for second-hand phones and tablets.
-      </p>
-    </div>
+      </div>
+
+      {billUrl ? (
+        <div className="mt-4">
+          <ProductBillViewButton billUrl={billUrl} />
+        </div>
+      ) : null}
+    </section>
   );
 }

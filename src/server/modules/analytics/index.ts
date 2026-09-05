@@ -1,17 +1,11 @@
-import { createHash } from "node:crypto";
 import { db } from "@/server/db/client";
 import { EventType } from "@prisma/client";
-import { env } from "@/lib/env";
 import type { OwnerInsights, ProductInterestRow } from "@/types";
+import { buildDailySessionHash } from "./session-hash";
+
+export { buildDailySessionHash };
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-/** Daily salted hash — one view per visitor per product per day (spec §23). */
-export function buildDailySessionHash(visitorId: string): string {
-  const salt = env.ANALYTICS_SALT ?? env.AUTH_SECRET;
-  const day = new Date().toISOString().slice(0, 10);
-  return createHash("sha256").update(`${salt}:${day}:${visitorId}`).digest("hex");
-}
 
 /**
  * Record an analytics event (e.g. PRODUCT_VIEW, WHATSAPP_CLICK)

@@ -10,6 +10,42 @@
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
+function cloudNameFromUrl(url: string): string | null {
+  const match = url.match(/res\.cloudinary\.com\/([^/]+)\//);
+  return match?.[1] ?? null;
+}
+
+/** Satori/next-og cannot render WebP — force JPG delivery for share cards. */
+export function ogSafeCloudinaryUrl(url: string): string {
+  if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) {
+    return url;
+  }
+  if (url.includes("/upload/f_jpg") || url.includes("/upload/f_png")) {
+    return url;
+  }
+  return url.replace("/upload/", "/upload/f_jpg,q_auto/");
+}
+
+export function isPdfBillUrl(url: string): boolean {
+  return url.includes("/raw/upload/") || /\.pdf(?:\?|$)/.test(url);
+}
+
+/** Visitor-facing bill URL — PDFs open as page 1 JPG (works on Cloudinary free tier). */
+export function resolveBillViewUrl(billPublicId: string, billUrl: string): string {
+  if (!isPdfBillUrl(billUrl)) {
+    return billUrl;
+  }
+
+  const cloud =
+    cloudNameFromUrl(billUrl) ??
+    CLOUD_NAME ??
+    process.env.CLOUDINARY_CLOUD_NAME ??
+    "shahnawaz";
+
+  const publicId = billPublicId.endsWith(".pdf") ? billPublicId : `${billPublicId}.pdf`;
+  return `https://res.cloudinary.com/${cloud}/image/upload/pg_1,f_jpg,q_auto/${publicId}`;
+}
+
 /**
  * Build an optimized Cloudinary delivery URL.
  * Never proxy images through the app server.

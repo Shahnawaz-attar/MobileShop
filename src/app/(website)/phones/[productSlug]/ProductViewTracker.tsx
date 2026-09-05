@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { trackEventAction } from "@/server/modules/analytics/actions";
+import { trackEvent } from "@/lib/track-event";
 
 interface ProductViewTrackerProps {
   productId: string;
@@ -29,7 +29,7 @@ export function ProductViewTracker({ productId }: ProductViewTrackerProps) {
     if (sessionStorage.getItem(tabKey)) return;
     sessionStorage.setItem(tabKey, "1");
 
-    void trackEventAction({
+    trackEvent({
       type: "PRODUCT_VIEW",
       productId,
       visitorId: getVisitorId(),

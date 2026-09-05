@@ -57,7 +57,7 @@ export function ProductEngagement({
               <Clock className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
               Listed {publishedDate}
             </span>
-            {listedAgo ? <span className="font-medium text-slate-500">{listedAgo}</span> : null}
+            {listedAgo ? <span className="font-medium text-slate-500 ml-2">{listedAgo}</span> : null}
           </li>
         )}
         {viewCount > 0 ? (

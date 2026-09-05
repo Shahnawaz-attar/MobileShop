@@ -222,6 +222,9 @@ model Product {
   purchasedAt    DateTime?
   /// Shop confirms original purchase bill is available (phones/tablets trust)
   hasBill        Boolean  @default(false)
+  /// Cloudinary URL for uploaded bill (PDF/PNG) — shown only via buyer opt-in button
+  billUrl        String?
+  billPublicId   String?
 
   /// Full-text search field — rebuilt on every product write
   searchText String?

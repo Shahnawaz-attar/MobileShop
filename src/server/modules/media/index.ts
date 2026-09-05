@@ -49,6 +49,27 @@ const deleteMediaSchema = z.object({
   mediaId: z.string().cuid(),
 });
 
+const billMimeSchema = z.enum(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
+
+const saveBillSchema = z.object({
+  productId: z.string().cuid(),
+  publicId: z.string().min(1),
+  url: z.string().url(),
+});
+
+const deleteBillSchema = z.object({
+  productId: z.string().cuid(),
+});
+
+function billResourceType(_mime: z.infer<typeof billMimeSchema>): "image" {
+  // PDFs upload as image so page 1 can be delivered without raw/PDF CDN restrictions.
+  return "image";
+}
+
+function cloudinaryResourceTypeFromUrl(url: string): "raw" | "image" {
+  return url.includes("/raw/upload/") ? "raw" : "image";
+}
+
 // --- Cloudinary config ---
 
 function getCloudinaryConfig() {
@@ -255,6 +276,112 @@ export async function getProductMedia(productId: string) {
     where: { productId },
     orderBy: { sortOrder: "asc" },
   });
+}
+
+/**
+ * Signed upload for purchase bill (PDF or image). One bill per product.
+ */
+export async function signBillUpload(input: {
+  productId: z.infer<typeof signUploadSchema>["productId"];
+  mimeType: z.infer<typeof billMimeSchema>;
+}) {
+  await requireOwner();
+  const parsed = z
+    .object({ productId: z.string().cuid(), mimeType: billMimeSchema })
+    .parse(input);
+
+  const product = await db.product.findUnique({
+    where: { id: parsed.productId },
+    select: { id: true, slug: true },
+  });
+
+  if (!product) {
+    throw new Error("Product not found");
+  }
+
+  const { apiSecret } = getCloudinaryConfig();
+  const timestamp = Math.round(Date.now() / 1000);
+  const folder = `mobileshop/bills/${product.slug}`;
+  const resourceType = billResourceType(parsed.mimeType);
+
+  // resource_type is set via upload URL (/raw/upload or /image/upload), not in the signed params
+  const signature = cloudinary.utils.api_sign_request({ timestamp, folder }, apiSecret);
+
+  return {
+    signature,
+    timestamp,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    folder,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    resourceType,
+  };
+}
+
+/** Save bill URL on product after Cloudinary upload. Replaces any previous bill. */
+export async function saveProductBill(input: z.infer<typeof saveBillSchema>) {
+  await requireOwner();
+  const parsed = saveBillSchema.parse(input);
+
+  const product = await db.product.findUnique({
+    where: { id: parsed.productId },
+    select: { id: true, billPublicId: true, billUrl: true },
+  });
+
+  if (!product) {
+    throw new Error("Product not found");
+  }
+
+  if (product.billPublicId && product.billUrl) {
+    try {
+      getCloudinaryConfig();
+      await cloudinary.uploader.destroy(product.billPublicId, {
+        resource_type: cloudinaryResourceTypeFromUrl(product.billUrl),
+      });
+    } catch {
+      console.error("Failed to delete old bill from Cloudinary:", product.billPublicId);
+    }
+  }
+
+  await db.product.update({
+    where: { id: parsed.productId },
+    data: {
+      billUrl: parsed.url,
+      billPublicId: parsed.publicId,
+    },
+  });
+
+  return { success: true as const };
+}
+
+/** Remove uploaded bill from product and Cloudinary. */
+export async function deleteProductBill(input: z.infer<typeof deleteBillSchema>) {
+  await requireOwner();
+  const parsed = deleteBillSchema.parse(input);
+
+  const product = await db.product.findUnique({
+    where: { id: parsed.productId },
+    select: { id: true, billPublicId: true, billUrl: true },
+  });
+
+  if (!product?.billPublicId || !product.billUrl) {
+    return { success: true as const };
+  }
+
+  try {
+    getCloudinaryConfig();
+    await cloudinary.uploader.destroy(product.billPublicId, {
+      resource_type: cloudinaryResourceTypeFromUrl(product.billUrl),
+    });
+  } catch {
+    console.error("Failed to delete bill from Cloudinary:", product.billPublicId);
+  }
+
+  await db.product.update({
+    where: { id: parsed.productId },
+    data: { billUrl: null, billPublicId: null },
+  });
+
+  return { success: true as const };
 }
 
 /**

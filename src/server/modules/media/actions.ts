@@ -6,6 +6,9 @@ import {
   attachMedia,
   reorderMedia,
   deleteMedia,
+  signBillUpload,
+  saveProductBill,
+  deleteProductBill,
 } from "@/server/modules/media";
 import type { ActionResult } from "@/types";
 import type { MediaKind } from "@/types";
@@ -104,6 +107,73 @@ export async function deleteMediaAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to delete media",
+      code: "DELETE_MEDIA_ERROR",
+    };
+  }
+}
+
+// --- Bill upload (PDF / PNG) ---
+
+type BillMime = "application/pdf" | "image/png" | "image/jpeg" | "image/webp";
+
+export async function signBillUploadAction(input: {
+  productId: string;
+  mimeType: BillMime;
+}): Promise<
+  ActionResult<{
+    signature: string;
+    timestamp: number;
+    apiKey: string;
+    folder: string;
+    cloudName: string | undefined;
+    resourceType: "image";
+  }>
+> {
+  try {
+    await requireOwner();
+    const result = await signBillUpload(input);
+    if (!result.apiKey) {
+      return { success: false, error: "Cloudinary API key missing", code: "UPLOAD_SIGN_ERROR" };
+    }
+    return { success: true, data: { ...result, apiKey: result.apiKey } };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to sign bill upload",
+      code: "UPLOAD_SIGN_ERROR",
+    };
+  }
+}
+
+export async function saveProductBillAction(input: {
+  productId: string;
+  publicId: string;
+  url: string;
+}): Promise<ActionResult<null>> {
+  try {
+    await requireOwner();
+    await saveProductBill(input);
+    return { success: true, data: null };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to save bill",
+      code: "UPLOAD_FAILED",
+    };
+  }
+}
+
+export async function deleteProductBillAction(
+  productId: string
+): Promise<ActionResult<null>> {
+  try {
+    await requireOwner();
+    await deleteProductBill({ productId });
+    return { success: true, data: null };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete bill",
       code: "DELETE_MEDIA_ERROR",
     };
   }

@@ -1,7 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
-import { trackEventAction } from "@/server/modules/analytics/actions";
+import { trackEvent } from "@/lib/track-event";
 
 interface WhatsAppCTAProps {
   productId: string;
@@ -9,17 +8,9 @@ interface WhatsAppCTAProps {
 }
 
 export function WhatsAppCTA({ productId, whatsappUrl }: WhatsAppCTAProps) {
-  const [, startTransition] = useTransition();
-
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-
-    // Fire analytics event in the background without blocking the navigation
-    startTransition(() => {
-      trackEventAction({ type: "WHATSAPP_CLICK", productId });
-    });
-
-    // Open WhatsApp in a new tab (or app on mobile)
+    trackEvent({ type: "WHATSAPP_CLICK", productId });
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 

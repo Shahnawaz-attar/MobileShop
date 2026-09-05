@@ -194,6 +194,8 @@ export interface AdminProductDetail {
   deviceRefLast4: string | null;
   purchasedAt: Date | null;
   hasBill: boolean;
+  billUrl: string | null;
+  billPublicId: string | null;
   media: {
     id: string;
     url: string;
