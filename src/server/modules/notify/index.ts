@@ -120,7 +120,8 @@ async function deliverBroadcast(
           endpoint: sub.endpoint,
           keys: { p256dh: sub.p256dh, auth: sub.auth },
         },
-        payload
+        payload,
+        { TTL: 60, urgency: "high" }
       );
       sentCount += 1;
     } catch (error) {

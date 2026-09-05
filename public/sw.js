@@ -8,7 +8,7 @@
  * - Admin → NEVER cache
  */
 
-const CACHE_NAME = "mobileshop-v5";
+const CACHE_NAME = "mobileshop-v6";
 const STATIC_ASSETS = [
   "/",
   "/offline.html",
@@ -145,13 +145,23 @@ self.addEventListener("push", (event) => {
     vibrate,
     tag: "mobileshop-stock",
     renotify: true,
-    requireInteraction: true,
+    silent: false,
+    requireInteraction: false,
     data: { url },
     actions: [{ action: "open", title: "Open listing" }],
   };
   if (image) options.image = image;
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(title, options),
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        for (const client of clients) {
+          client.postMessage({ type: "STOCK_PUSH", title, body, url });
+        }
+      }),
+    ])
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {
