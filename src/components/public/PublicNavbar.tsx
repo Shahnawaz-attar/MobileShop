@@ -118,7 +118,11 @@ export function PublicNavbar({ shopName, logoUrl }: PublicNavbarProps) {
 
             <div className="mb-5">
               <Suspense fallback={<div className="h-12 animate-pulse rounded-2xl bg-surface-hover" />}>
-                <SearchInput placeholder="Search devices…" onNavigate={() => setIsMenuOpen(false)} />
+                <SearchInput
+                  placeholder="Search devices…"
+                  submitOnAction
+                  onNavigate={() => setIsMenuOpen(false)}
+                />
               </Suspense>
             </div>
 
