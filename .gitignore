@@ -16,6 +16,7 @@ build/
 # env files
 .env
 .env.local
+.env.git
 .env.development.local
 .env.test.local
 .env.production.local
