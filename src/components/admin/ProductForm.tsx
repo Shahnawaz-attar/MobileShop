@@ -14,6 +14,7 @@ import {
 import { ProductMediaUpload } from "@/components/admin/ProductMediaUpload";
 import { BrandModelPicker } from "@/components/admin/BrandModelPicker";
 import { ProductPublishSuccess } from "@/components/admin/ProductPublishSuccess";
+import { formatDateInput } from "@/lib/time-ago";
 import type {
   BrandOption,
   ModelOption,
@@ -93,9 +94,7 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
   const [hasCharger, setHasCharger] = useState(product?.hasCharger ?? false);
   const [hasCable, setHasCable] = useState(product?.hasCable ?? false);
   const [hasBill, setHasBill] = useState(product?.hasBill ?? false);
-  const [purchasedAt, setPurchasedAt] = useState(
-    product?.purchasedAt ? product.purchasedAt.toISOString().slice(0, 10) : ""
-  );
+  const [purchasedAt, setPurchasedAt] = useState(() => formatDateInput(product?.purchasedAt));
   const [description, setDescription] = useState(product?.description ?? "");
   const [internalNotes, setInternalNotes] = useState(product?.internalNotes ?? "");
   const [availability, setAvailability] = useState<Availability>(
@@ -508,39 +507,37 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
         </div>
       </section>
 
-      {(deviceType === "PHONE" || deviceType === "TABLET") && (
-        <section className={sectionClass}>
-          <h2 className="text-base font-semibold text-foreground">Bill &amp; device age</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Buyers see this on the product page only when bill is confirmed — builds trust for second-hand devices.
-          </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label htmlFor="purchasedAt" className={labelClass}>
-                Original bill date
-              </label>
-              <input
-                id="purchasedAt"
-                type="date"
-                value={purchasedAt}
-                onChange={(e) => setPurchasedAt(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <input
-                  type="checkbox"
-                  checked={hasBill}
-                  onChange={(e) => setHasBill(e.target.checked)}
-                  className="h-4 w-4 rounded border-input accent-accent"
-                />
-                Original bill available (show on website)
-              </label>
-            </div>
+      <section className={sectionClass}>
+        <h2 className="text-base font-semibold text-foreground">Bill &amp; device age</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          For phones and tablets — shown on the website only when bill is confirmed. Ignored for watches and other devices.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <label htmlFor="purchasedAt" className={labelClass}>
+              Original bill date
+            </label>
+            <input
+              id="purchasedAt"
+              type="date"
+              value={purchasedAt}
+              onChange={(e) => setPurchasedAt(e.target.value)}
+              className={inputClass}
+            />
           </div>
-        </section>
-      )}
+          <div className="flex items-end">
+            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <input
+                type="checkbox"
+                checked={hasBill}
+                onChange={(e) => setHasBill(e.target.checked)}
+                className="h-4 w-4 rounded border-input accent-accent"
+              />
+              Original bill available (show on website)
+            </label>
+          </div>
+        </div>
+      </section>
 
       {/* Details */}
       <section className={sectionClass}>

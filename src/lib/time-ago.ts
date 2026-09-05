@@ -22,6 +22,13 @@ export function plural(count: number, singular: string, pluralForm?: string) {
   return count === 1 ? singular : (pluralForm ?? `${singular}s`);
 }
 
+/** HTML date input value — safe for RSC props (Date or ISO string). */
+export function formatDateInput(value: Date | string | null | undefined): string {
+  if (!value) return "";
+  if (typeof value === "string") return value.slice(0, 10);
+  return value.toISOString().slice(0, 10);
+}
+
 /** Bill / purchase month for trust display — e.g. "Sep 2023" */
 export function formatBillMonth(purchasedAt: Date | null): string | null {
   if (!purchasedAt) return null;
