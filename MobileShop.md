@@ -2343,3 +2343,138 @@ without creating an account or installing an app.
 ## Final product principle
 
 **Do not build a bigger website. Build a website that makes the shop sell more phones and look more trustworthy.**
+
+
+
+new features can be added
+Admin Login Friction (Opportunity for Biometrics):
+Currently, your admin uses Auth.js with standard credentials (email/password). Shop owners are usually standing at the counter and typing passwords on a mobile device is slow. Integrating WebAuthn (Passkeys/Fingerprint unlock) for the admin dashboard would make logging in instant and secure
+
+Automated WhatsApp Status "Share Pack":
+While you have OG images for link previews, shop owners drive massive sales through their daily WhatsApp Status updates. You should add a feature in the admin panel to generate a 9:16 vertical image (with the phone photo, price, and shop logo) specifically formatted to be downloaded and uploaded directly to their WhatsApp Status. This was noted in your V1.1 roadmap.
+
+
+Offline Caching Edge Cases:
+Ensure your PWA Service Worker strictly follows the NetworkOnly rule for product details. If a buyer sees a cached version of an iPhone that is already marked SOLD, it creates a bad customer experience
+
+
+Missing-Data & Stale Listing Reminders:
+In the admin dashboard, create a "Needs Attention" widget. If a phone has been listed for >30 days, or if an iPhone listing is missing a battery health screenshot (BATTERY_SCREEN), prompt the owner to update it. This keeps the catalogue fresh and honest.
+
+Counter Printables (QR Kit):
+You already have QrKitActions.tsx and api/qr.png. Extend this to generate a printable A5 PDF flyer ("Scan to see today's live stock") that the owner can stick on their glass display counter.
+
+
+I see StockAlertSubscribe.tsx in your components. Wiring this up so buyers can drop their WhatsApp number to get notified when a specific brand (e.g., "Notify me when you get Google Pixel phones") arrives will help shop owners capture high-intent leads.
+
+
+1. 1-Tap WhatsApp Status Generator (Client-Side Canvas / SVG)
+How it works: In the admin panel next to every phone, add a "Create WhatsApp Status" button.
+
+The output: It generates a 1080×1920 (9:16) image featuring:
+
+The primary phone photo (cleanly framed)
+
+Bold model name & storage (e.g., iPhone 13 128GB - Starlight)
+
+Selling price in large bold typography with MRP strikethrough
+
+Condition badge (Like New, Battery 88%, With Box & Bill)
+
+Shop branding, address, and "DM / Visit Today" banner at the bottom
+
+Why it’s 100% free: You do not need any external paid service. Render it purely in the browser using HTML5 <canvas> or the server with @vercel/og / Satori. The owner taps "Download" or "Share", and it saves straight to their gallery.
+
+The impact: Daily recurring usage. The owner opens your admin panel every single morning just to download posters for their stock.
+
+
+
+3. Printable "25-Point Inspection & Warranty Slip" (PDF)
+Unorganized local mobile markets suffer from a trust deficit: buyers fear buying water-damaged, stolen, or refurbished phones with cheap duplicate screens.
+
+How it works: When a phone is marked SOLD in the admin, provide a "Generate Trust Slip" button. It compiles a 1-page digital or printable receipt:
+
+Shop details and GST/shop number
+
+Device name, storage, and last 4 digits of IMEI/Serial
+
+Checklist table: Screen Original, FaceID/Fingerprint working, Camera clean, Battery health verified
+
+Shop warranty terms (e.g., 15-day testing warranty)
+
+Why it’s 100% free: Generated entirely in the browser using lightweight libraries like @react-pdf/renderer or jspdf.
+
+The impact: The owner sends this PDF to the buyer over WhatsApp upon purchase. It eliminates buyer remorse, looks as professional as Cashify or Apple Certified, and turns buyers into word-of-mouth advocates.
+
+
+
+
+2. browser-image-compression (Zero-Latency Upload Shield)
+Installation: npm install browser-image-compression
+
+The Kick: When an owner takes 5 photos on their Android phone at 4K resolution (6MB–10MB each), normal uploads fail or freeze on counter 4G, draining Cloudinary transformation credits.
+
+Why it works:
+
+Compresses 8MB raw camera shots down to crisp 250KB WebP images inside browser RAM before the upload network request even fires.
+
+Makes image uploads feel instantaneous.
+
+Guarantees you never breach Cloudinary’s free storage and bandwidth caps across multiple shop deployments.
+import imageCompression from 'browser-image-compression';
+
+const options = {
+  maxSizeMB: 0.3,
+  maxWidthOrHeight: 1600,
+  useWebWorker: true,
+  fileType: 'image/webp'
+};
+const compressedFile = await imageCompression(rawFile, options);
+
+
+
+
+3. html-to-image (Client-Side WhatsApp Status Engine)
+Installation: npm install html-to-image
+
+The Kick: Avoid heavy server-side image processing setups. You build standard Tailwind card components (1080x1920 hidden div with price tags, phone image, shop watermark), and convert them directly to high-res PNG blobs in the browser.
+
+Why it works:
+
+Zero server CPU load—rendering happens on the owner's phone.
+
+Tapping "Download Poster" delivers an export-ready graphic to their camera roll in under 300ms.
+
+
+
+
+4. Native Web Share API (navigator.share with Files)
+Installation: Built into modern browsers (0 KB bundle size).
+
+The Kick: Rather than forcing the owner to download an image and manually attach it in WhatsApp, use native Android Web Sharing to send the rendered poster image and text directly into WhatsApp in one motion.
+
+Why it works:
+
+TypeScript
+if (navigator.canShare && navigator.canShare({ files: [statusImageFile] })) {
+  await navigator.share({
+    files: [statusImageFile],
+    title: 'iPhone 13 Available',
+    text: 'Check live stock at Shree Mobiles: https://shop.in/phones/iphone-13'
+  });
+}
+This automatically triggers the native Android bottom sheet with WhatsApp, WhatsApp Status, and Instagram Stories as primary targets.
+
+
+
+
+5. canvas-confetti + Web Haptics (The "Mark as Sold" Dopamine Loop)
+Installation: npm install canvas-confetti (and use vanilla navigator.vibrate)
+
+The Kick: Second-hand mobile retail is driven by inventory velocity. When the owner flips the status toggle to SOLD:
+
+Trigger a double vibration pulse on their phone: navigator.vibrate([40, 60, 40]).
+
+Fire an instant, lightweight confetti burst over the screen.
+
+Why it works: It provides immediate psychological reinforcement. Counter staff actively look forward to marking inventory as sold on your platform, which keeps the catalogue updated and prevents stale listings.

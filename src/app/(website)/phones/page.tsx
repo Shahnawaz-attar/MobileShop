@@ -10,6 +10,8 @@ import { SearchInput } from "@/components/shared/SearchInput";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { MobileFiltersDrawer } from "./components/MobileFiltersDrawer";
 import { ActiveFilters } from "./components/ActiveFilters";
+import { BrandInterestForm } from "@/components/public/BrandInterestForm";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 
 import { getShop } from "@/server/modules/shop";
 import type { Metadata } from "next";
@@ -65,6 +67,10 @@ export default async function PhonesPage({
           <div className="brand-glow absolute right-[-8%] top-[-30%] h-[300px] w-[420px] opacity-70" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 sm:py-14">
+          <Breadcrumbs
+            className="mb-4"
+            items={[{ label: "Home", href: "/" }, { label: "All Products" }]}
+          />
           <FadeIn direction="up">
             <span className="eyebrow"><span className="eyebrow-dot" />Live inventory</span>
             <h1 className="mt-3 text-4xl font-black tracking-tight text-ink sm:text-5xl">
@@ -153,6 +159,11 @@ export default async function PhonesPage({
                 />
               </div>
             )}
+
+            {/* Lead capture — free-text device */}
+            <div className="mt-10">
+              <BrandInterestForm />
+            </div>
           </div>
 
         </div>

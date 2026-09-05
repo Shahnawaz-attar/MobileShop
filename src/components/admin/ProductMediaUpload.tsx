@@ -2,6 +2,7 @@
 
 import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import imageCompression from "browser-image-compression";
 import {
   signUploadAction,
   attachMediaAction,
@@ -31,6 +32,30 @@ export function ProductMediaUpload({ productId, initialMedia }: ProductMediaUplo
   const [mediaToDelete, setMediaToDelete] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * Downscale + compress a raw camera file in-browser BEFORE upload.
+   * Keeps counter-4G uploads fast and protects Cloudinary credits.
+   * Returns the original file if it's already small / not an image.
+   */
+  async function compressImage(file: File): Promise<File> {
+    if (!file.type.startsWith("image/")) return file;
+    // Skip WebP/AVIF etc. that are already small enough
+    if (file.type === "image/webp" && file.size < 300 * 1024) return file;
+    if (file.size < 600 * 1024) return file; // under ~600KB, no need
+
+    try {
+      return await imageCompression(file, {
+        maxSizeMB: 0.4,
+        maxWidthOrHeight: 1600,
+        useWebWorker: true,
+        initialQuality: 0.8,
+      });
+    } catch {
+      // If compression fails, fall back to the original file.
+      return file;
+    }
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -47,10 +72,13 @@ export function ProductMediaUpload({ productId, initialMedia }: ProductMediaUplo
       const newMediaItems = [...media];
 
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file) continue;
+        const rawFile = files[i];
+        if (!rawFile) continue;
 
-        // 1. Get signature from server
+        // 1. Compress / downscale before anything hits the network
+        const file = await compressImage(rawFile);
+
+        // 2. Get signature from server
         const signRes = await signUploadAction({ productId, kind: "OTHER" });
         if (!signRes.success) throw new Error(signRes.error);
         

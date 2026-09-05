@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getShop, toPublicShopInfo, buildWhatsAppHref } from "@/server/modules/shop";
 import { resolvePublicAppUrl } from "@/lib/qr";
 import { FadeIn } from "@/components/shared/FadeIn";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 
 export async function generateMetadata(): Promise<Metadata> {
   const shop = await getShop();
@@ -41,6 +42,10 @@ export default async function AboutPage() {
   return (
     <div className="bg-white">
       <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
+        <Breadcrumbs
+          className="mb-6"
+          items={[{ label: "Home", href: "/" }, { label: "About" }]}
+        />
         <FadeIn>
           <span className="eyebrow"><span className="eyebrow-dot" />About the store</span>
           <h1 className="mt-3 text-4xl font-black tracking-tight text-ink sm:text-5xl">

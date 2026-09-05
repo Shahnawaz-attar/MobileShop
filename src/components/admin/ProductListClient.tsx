@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import confetti from "canvas-confetti";
 import { setAvailabilityAction, deleteProductAction, loadMoreAdminProductsAction } from "@/server/modules/catalog/actions";
 import type { Availability } from "@/types";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -90,6 +91,25 @@ export function ProductListClient({ initialProducts, initialNextCursor, tab, q }
     }, 5000);
   };
 
+  /** Quick dopamine burst when a phone is marked SOLD (keeps stock accurate). */
+  const celebrateSold = () => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate([40, 60, 40]);
+      } catch {
+        /* ignore */
+      }
+    }
+    confetti({
+      particleCount: 90,
+      spread: 75,
+      startVelocity: 42,
+      origin: { y: 0.6 },
+      colors: ["#25D366", "#16a34a", "#0a0a0a", "#ffffff"],
+      disableForReducedMotion: true,
+    });
+  };
+
   const handleSetAvailability = (id: string, availability: Availability) => {
     startTransition(async () => {
       const result = await setAvailabilityAction(id, availability);
@@ -105,6 +125,10 @@ export function ProductListClient({ initialProducts, initialNextCursor, tab, q }
             } : p
           )
         );
+
+        if (availability === "SOLD") {
+          celebrateSold();
+        }
 
         showToast(
           availability === "SOLD" ? "Marked as sold" : `Marked as ${availability.toLowerCase()}`

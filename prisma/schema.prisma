@@ -327,3 +327,17 @@ model PushBroadcast {
   @@index([createdAt])
   @@index([kind, createdAt])
 }
+
+/// Buyer lead: someone who wants to be contacted when a device they want arrives.
+/// `device` is free text (e.g. "iPhone 15 Pro", "Samsung Galaxy S24").
+/// Owner messages these buyers on WhatsApp manually (no paid API needed).
+model BrandInterest {
+  id        String   @id @default(cuid())
+  device    String
+  whatsapp  String
+  name      String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

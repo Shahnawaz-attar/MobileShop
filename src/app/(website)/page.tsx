@@ -499,7 +499,7 @@ export default async function HomePage() {
                             const val = String(time || "");
                             const isClosed = val.trim() === "" || val.includes("Closed");
                             const isHoliday = val.includes("Holiday");
-                            let displayTime = val.replace(/Holiday\|?/g, "").trim() || "Closed";
+                            const displayTime = val.replace(/Holiday\|?/g, "").trim() || "Closed";
                             return (
                               <li key={day} className="flex items-center justify-between gap-3 px-4 py-2.5">
                                 <span className="text-sm font-semibold capitalize text-ink-soft">{day}</span>

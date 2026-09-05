@@ -19,7 +19,7 @@ export function QrKitActions({ targetUrl }: QrKitActionsProps) {
         onClick={() => window.print()}
         className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-card px-5 text-sm font-semibold text-foreground"
       >
-        Print A5
+        Print A5 flyer
       </button>
       <button
         type="button"

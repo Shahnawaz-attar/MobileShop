@@ -12,6 +12,7 @@ import { ProductEngagement } from "@/components/public/ProductEngagement";
 import { ProductTrustProof } from "@/components/public/ProductTrustProof";
 import { ProductViewTracker } from "./ProductViewTracker";
 import { FadeIn } from "@/components/shared/FadeIn";
+import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 import { ogSafeCloudinaryUrl } from "@/lib/image";
 
 interface PageProps {
@@ -141,6 +142,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
           product.availability === "AVAILABLE" ? "pb-28 lg:pb-8" : ""
         }`}
       >
+        <Breadcrumbs
+          className="mb-6"
+          items={[
+            { label: "Home", href: "/" },
+            { label: "All Products", href: "/phones" },
+            { label: product.title },
+          ]}
+        />
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
 
           <FadeIn direction="up" className="lg:sticky lg:top-8 lg:h-max">

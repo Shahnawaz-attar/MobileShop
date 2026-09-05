@@ -4,6 +4,7 @@ import { listBrands, listModels, getAdminProduct } from "@/server/modules/catalo
 import { getShop } from "@/server/modules/shop";
 import { resolvePublicAppUrl } from "@/lib/qr";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { WhatsAppStatusGenerator } from "@/components/admin/WhatsAppStatusGenerator";
 
 export const metadata: Metadata = {
   title: "Edit Device",
@@ -26,6 +27,9 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     notFound();
   }
 
+  const publicAppUrl = resolvePublicAppUrl();
+  const primaryMedia = product.media[0];
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
@@ -42,8 +46,36 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         models={models}
         product={product}
         shopName={shop.name}
-        publicAppUrl={resolvePublicAppUrl()}
+        publicAppUrl={publicAppUrl}
       />
+
+      {/* WhatsApp Status poster generator */}
+      {product.availability !== "DRAFT" && (
+        <div className="mt-6">
+          <WhatsAppStatusGenerator
+            product={{
+              title: product.title,
+              storageGb: product.storageGb,
+              ramGb: product.ramGb,
+              colour: product.colour,
+              pricePaise: product.pricePaise,
+              mrpPaise: product.mrpPaise,
+              condition: product.condition,
+              primaryImageUrl: primaryMedia?.url ?? null,
+              primaryImageAlt: null,
+              slug: product.slug,
+            }}
+            shop={{
+              name: shop.name,
+              logoUrl: shop.logoUrl,
+              city: shop.city,
+              addressLine1: shop.addressLine1,
+              whatsapp: shop.whatsapp,
+            }}
+            productUrl={`${publicAppUrl}/phones/${product.slug}`}
+          />
+        </div>
+      )}
     </div>
   );
 }

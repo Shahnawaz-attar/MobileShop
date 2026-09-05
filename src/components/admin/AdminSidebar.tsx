@@ -14,6 +14,7 @@ import {
   FileText,
   QrCode,
   Bell,
+  MessagesSquare,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { href: "/admin/content", label: "Content", icon: FileText },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/qr", label: "QR", icon: QrCode },
+  { href: "/admin/leads", label: "Leads", icon: MessagesSquare },
   { href: "/admin/notify", label: "Stock alerts", icon: Bell },
 ] as const;
 
