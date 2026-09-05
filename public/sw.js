@@ -8,7 +8,7 @@
  * - Admin → NEVER cache
  */
 
-const CACHE_NAME = "mobileshop-v4";
+const CACHE_NAME = "mobileshop-v5";
 const STATIC_ASSETS = [
   "/",
   "/offline.html",
@@ -122,21 +122,36 @@ self.addEventListener("push", (event) => {
   let title = "New stock";
   let body = "Fresh listings are live.";
   let url = "/phones";
+  let icon = "/icons/notify-192.png";
+  let image;
   try {
     const data = event.data ? event.data.json() : {};
     if (typeof data.title === "string") title = data.title;
     if (typeof data.body === "string") body = data.body;
     if (typeof data.url === "string") url = data.url;
+    if (typeof data.icon === "string") icon = data.icon;
+    if (typeof data.image === "string") image = data.image;
   } catch {
     if (event.data) body = event.data.text();
   }
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: "/icons/icon-192.svg",
-      data: { url },
-    })
-  );
+
+  /** Distinct ~2s pulse (Android). iOS ignores vibrate. */
+  const vibrate = [280, 90, 280, 90, 450, 110, 700];
+
+  const options = {
+    body,
+    icon,
+    badge: "/icons/notify-badge.png",
+    vibrate,
+    tag: "mobileshop-stock",
+    renotify: true,
+    requireInteraction: true,
+    data: { url },
+    actions: [{ action: "open", title: "Open listing" }],
+  };
+  if (image) options.image = image;
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", (event) => {

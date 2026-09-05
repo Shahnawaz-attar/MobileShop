@@ -16,6 +16,8 @@ const broadcastSchema = z.object({
   title: z.string().trim().min(3).max(80),
   body: z.string().trim().min(3).max(140),
   url: z.string().startsWith("/").max(200).optional(),
+  icon: z.string().url().optional(),
+  image: z.string().url().optional(),
 });
 
 export function isPushConfigured(): boolean {
@@ -106,6 +108,8 @@ async function deliverBroadcast(
     title: parsed.title,
     body: parsed.body,
     url: parsed.url ?? "/phones",
+    icon: parsed.icon,
+    image: parsed.image,
   });
 
   let sentCount = 0;
@@ -148,7 +152,8 @@ export async function sendStockBroadcast(input: z.infer<typeof broadcastSchema>)
     throw new Error("You can send 50 shop alerts per day. Try tomorrow.");
   }
 
-  return deliverBroadcast(parsed, "MANUAL");
+  const { icon } = await shopNotifyAssets();
+  return deliverBroadcast({ ...parsed, icon: parsed.icon ?? icon }, "MANUAL");
 }
 
 async function tryAutoBroadcast(
@@ -160,7 +165,7 @@ async function tryAutoBroadcast(
   if (input.kind === "ANNOUNCEMENT" && summary.remainingAlerts <= 0) return;
   try {
     await deliverBroadcast(
-      { title: input.title, body: input.body, url: input.url },
+      { title: input.title, body: input.body, url: input.url, icon: input.icon, image: input.image },
       input.kind
     );
   } catch (error) {
@@ -174,24 +179,49 @@ function clip(text: string, max: number) {
   return `${trimmed.slice(0, max - 1)}…`;
 }
 
+function bitmapUrl(url: string | null | undefined): string | undefined {
+  if (!url || !/^https?:\/\//i.test(url)) return undefined;
+  if (/\.svg(\?|$)/i.test(url)) return undefined;
+  return url;
+}
+
+async function shopNotifyAssets() {
+  const shop = await db.shop.findFirst({
+    select: { name: true, logoUrl: true },
+    orderBy: { createdAt: "asc" },
+  });
+  return {
+    shopName: shop?.name ?? "Shop",
+    icon: bitmapUrl(shop?.logoUrl),
+  };
+}
+
 export async function notifyProductListed(input: { title: string; slug: string }) {
-  const shop = await db.shop.findFirst({ select: { name: true }, orderBy: { createdAt: "asc" } });
-  const shopName = shop?.name ?? "Shop";
+  const [{ shopName, icon }, media] = await Promise.all([
+    shopNotifyAssets(),
+    db.media.findFirst({
+      where: { product: { slug: input.slug } },
+      orderBy: { sortOrder: "asc" },
+      select: { url: true },
+    }),
+  ]);
   await tryAutoBroadcast({
     kind: "PRODUCT",
-    title: clip(`${shopName}: new stock`, 80),
-    body: clip(`${input.title} is live. Open to see photos and price.`, 140),
+    title: clip(`New at ${shopName}`, 80),
+    body: clip(`${input.title} just went live — tap to see photos & price`, 140),
     url: `/phones/${input.slug}`,
+    icon,
+    image: bitmapUrl(media?.url),
   });
 }
 
 export async function notifyAnnouncementLive(input: { title: string }) {
-  const shop = await db.shop.findFirst({ select: { name: true }, orderBy: { createdAt: "asc" } });
-  const shopName = shop?.name ?? "Shop";
+  const { shopName, icon } = await shopNotifyAssets();
   await tryAutoBroadcast({
     kind: "ANNOUNCEMENT",
-    title: clip(`${shopName}: shop update`, 80),
+    title: clip(`${shopName}`, 80),
     body: clip(input.title, 140),
     url: "/",
+    icon,
   });
 }
