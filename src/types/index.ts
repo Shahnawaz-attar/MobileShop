@@ -192,6 +192,8 @@ export interface AdminProductDetail {
   isFeatured: boolean;
   internalNotes: string | null;
   deviceRefLast4: string | null;
+  purchasedAt: Date | null;
+  hasBill: boolean;
   media: {
     id: string;
     url: string;
@@ -232,6 +234,8 @@ export interface CreateProductInput {
   isFeatured?: boolean;
   internalNotes?: string | null;
   deviceRefLast4?: string | null;
+  purchasedAt?: Date | null;
+  hasBill?: boolean;
 }
 
 /** Update product input — all fields optional (partial update) */

@@ -218,7 +218,10 @@ model Product {
   deviceRefLast4 String? @db.Text
   /// Private — internal notes never shown to buyers
   internalNotes  String? @db.Text
+  /// Original purchase bill date — shown publicly only when hasBill is true
   purchasedAt    DateTime?
+  /// Shop confirms original purchase bill is available (phones/tablets trust)
+  hasBill        Boolean  @default(false)
 
   /// Full-text search field — rebuilt on every product write
   searchText String?

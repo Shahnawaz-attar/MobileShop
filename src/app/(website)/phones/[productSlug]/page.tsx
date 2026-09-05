@@ -9,6 +9,7 @@ import { resolvePublicAppUrl } from "@/lib/qr";
 import { ProductGallery } from "./ProductGallery";
 import { ProductShareBar } from "@/components/public/ProductShareBar";
 import { ProductEngagement } from "@/components/public/ProductEngagement";
+import { ProductTrustProof } from "@/components/public/ProductTrustProof";
 import { ProductViewTracker } from "./ProductViewTracker";
 import { FadeIn } from "@/components/shared/FadeIn";
 
@@ -200,6 +201,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 />
               </div>
             )}
+
+            <ProductTrustProof
+              deviceType={product.deviceType}
+              hasBill={product.hasBill}
+              purchasedAt={product.purchasedAt}
+            />
 
             {/* Key Specifications Grid */}
             <div className="mt-10">

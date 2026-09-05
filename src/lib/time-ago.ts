@@ -1,4 +1,4 @@
-import { differenceInHours, format, formatDistanceToNow } from "date-fns";
+import { differenceInHours, differenceInMonths, format, formatDistanceToNow } from "date-fns";
 
 /** e.g. "5 Sep 2026" */
 export function formatPublishedDate(publishedAt: Date | null): string | null {
@@ -20,4 +20,23 @@ export function isFreshListing(publishedAt: Date | null): boolean {
 
 export function plural(count: number, singular: string, pluralForm?: string) {
   return count === 1 ? singular : (pluralForm ?? `${singular}s`);
+}
+
+/** Bill / purchase month for trust display — e.g. "Sep 2023" */
+export function formatBillMonth(purchasedAt: Date | null): string | null {
+  if (!purchasedAt) return null;
+  return format(purchasedAt, "MMM yyyy");
+}
+
+/** Human device age from original bill date — e.g. "2 years 3 months" */
+export function formatDeviceAge(purchasedAt: Date | null): string | null {
+  if (!purchasedAt) return null;
+  const months = differenceInMonths(new Date(), purchasedAt);
+  if (months < 0) return null;
+  if (months === 0) return "less than 1 month";
+  if (months < 12) return `${months} month${months === 1 ? "" : "s"}`;
+  const years = Math.floor(months / 12);
+  const rem = months % 12;
+  if (rem === 0) return `${years} year${years === 1 ? "" : "s"}`;
+  return `${years} year${years === 1 ? "" : "s"} ${rem} month${rem === 1 ? "" : "s"}`;
 }

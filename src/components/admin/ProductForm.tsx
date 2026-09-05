@@ -92,6 +92,10 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
   const [hasBox, setHasBox] = useState(product?.hasBox ?? false);
   const [hasCharger, setHasCharger] = useState(product?.hasCharger ?? false);
   const [hasCable, setHasCable] = useState(product?.hasCable ?? false);
+  const [hasBill, setHasBill] = useState(product?.hasBill ?? false);
+  const [purchasedAt, setPurchasedAt] = useState(
+    product?.purchasedAt ? product.purchasedAt.toISOString().slice(0, 10) : ""
+  );
   const [description, setDescription] = useState(product?.description ?? "");
   const [internalNotes, setInternalNotes] = useState(product?.internalNotes ?? "");
   const [availability, setAvailability] = useState<Availability>(
@@ -134,6 +138,11 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
       hasBox,
       hasCharger,
       hasCable,
+      hasBill: deviceType === "PHONE" || deviceType === "TABLET" ? hasBill : false,
+      purchasedAt:
+        (deviceType === "PHONE" || deviceType === "TABLET") && purchasedAt
+          ? new Date(`${purchasedAt}T12:00:00`)
+          : null,
       description: description.trim() || null,
       availability,
       internalNotes: internalNotes.trim() || null,
@@ -498,6 +507,40 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
           </div>
         </div>
       </section>
+
+      {(deviceType === "PHONE" || deviceType === "TABLET") && (
+        <section className={sectionClass}>
+          <h2 className="text-base font-semibold text-foreground">Bill &amp; device age</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Buyers see this on the product page only when bill is confirmed — builds trust for second-hand devices.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label htmlFor="purchasedAt" className={labelClass}>
+                Original bill date
+              </label>
+              <input
+                id="purchasedAt"
+                type="date"
+                value={purchasedAt}
+                onChange={(e) => setPurchasedAt(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <input
+                  type="checkbox"
+                  checked={hasBill}
+                  onChange={(e) => setHasBill(e.target.checked)}
+                  className="h-4 w-4 rounded border-input accent-accent"
+                />
+                Original bill available (show on website)
+              </label>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Details */}
       <section className={sectionClass}>

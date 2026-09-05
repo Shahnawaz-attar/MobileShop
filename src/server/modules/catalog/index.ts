@@ -58,6 +58,8 @@ const productInputSchema = z.object({
   isFeatured: z.boolean().optional(),
   internalNotes: z.string().trim().max(5000).nullable().optional(),
   deviceRefLast4: z.string().trim().max(4).nullable().optional(),
+  purchasedAt: z.coerce.date().nullable().optional(),
+  hasBill: z.boolean().optional(),
 });
 
 export type ProductInput = z.infer<typeof productInputSchema>;
@@ -416,6 +418,8 @@ export async function getAdminProduct(id: string) {
       isFeatured: true,
       internalNotes: true,
       deviceRefLast4: true,
+      purchasedAt: true,
+      hasBill: true,
       media: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -469,6 +473,8 @@ export async function getPublicProduct(slug: string) {
       isFeatured: true,
       publishedAt: true,
       viewCount: true,
+      hasBill: true,
+      purchasedAt: true,
       brand: { select: { name: true } },
       model: { select: { name: true } },
       media: {
@@ -498,7 +504,11 @@ export async function getPublicProduct(slug: string) {
     },
   });
 
-  return { ...product, whatsappClicksWeek };
+  return {
+    ...product,
+    whatsappClicksWeek,
+    purchasedAt: product.hasBill ? product.purchasedAt : null,
+  };
 }
 
 /**
@@ -583,6 +593,8 @@ export async function createProduct(input: ProductInput) {
       soldAt,
       internalNotes: parsed.internalNotes ?? null,
       deviceRefLast4: parsed.deviceRefLast4 ?? null,
+      purchasedAt: parsed.purchasedAt ?? null,
+      hasBill: parsed.hasBill ?? false,
       searchText,
     },
     select: { id: true, slug: true, title: true },
@@ -688,6 +700,8 @@ export async function updateProduct(id: string, input: ProductInput) {
       soldAt,
       internalNotes: parsed.internalNotes ?? null,
       deviceRefLast4: parsed.deviceRefLast4 ?? null,
+      purchasedAt: parsed.purchasedAt ?? null,
+      hasBill: parsed.hasBill ?? false,
       searchText,
     },
     select: { id: true, slug: true, title: true },
@@ -824,6 +838,8 @@ export async function duplicateProduct(id: string) {
       soldAt: null,
       internalNotes: existing.internalNotes,
       deviceRefLast4: existing.deviceRefLast4,
+      purchasedAt: existing.purchasedAt,
+      hasBill: existing.hasBill,
       searchText: existing.searchText,
     },
     select: { id: true, slug: true, title: true },

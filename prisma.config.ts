@@ -5,6 +5,18 @@ import { defineConfig, env } from "prisma/config";
 config({ path: ".env.local" });
 config({ path: ".env" });
 
+/** Neon pooler URLs often fail migrations (P1001) — use direct host when unset. */
+function migrationDatabaseUrl(): string {
+  const direct = process.env.DIRECT_URL;
+  if (direct) return direct;
+
+  const url = process.env.DATABASE_URL ?? "";
+  if (url.includes("-pooler.")) {
+    return url.replace("-pooler.", ".");
+  }
+  return env("DATABASE_URL");
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
@@ -12,6 +24,6 @@ export default defineConfig({
     seed: "npx tsx prisma/seed.ts",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: migrationDatabaseUrl(),
   },
 });
