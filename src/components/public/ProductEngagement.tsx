@@ -41,39 +41,39 @@ export function ProductEngagement({
   }
 
   return (
-    <div className="relative mt-6 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgb(0,0,0,0.04)]">
+    <div className="device-card relative mt-6 p-4">
       {fresh && (
-        <span className="absolute top-4 right-4 rounded-full bg-orange-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-orange-700">
+        <span className="absolute right-4 top-4 rounded-full bg-warning/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-warning">
           Fresh
         </span>
       )}
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 pr-16">
+      <p className="mb-3 pr-16 text-[10px] font-black uppercase tracking-widest text-ink-faint">
         Live interest
       </p>
       <ul className="space-y-2">
         {publishedDate && (
-          <li className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-slate-700">
+          <li className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-ink">
             <span className="inline-flex items-center gap-2">
-              <Clock className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+              <Clock className="h-4 w-4 shrink-0 text-ink-faint" aria-hidden />
               Listed {publishedDate}
             </span>
-            {listedAgo ? <span className="font-medium text-slate-500 ml-2">{listedAgo}</span> : null}
+            {listedAgo ? <span className="ml-2 font-medium text-ink-soft">{listedAgo}</span> : null}
           </li>
         )}
         {viewCount > 0 ? (
-          <li className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <Eye className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+          <li className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <Eye className="h-4 w-4 shrink-0 text-ink-faint" aria-hidden />
             {viewCount} {plural(viewCount, "person")} viewed this listing
           </li>
         ) : fresh ? (
-          <li className="flex items-center gap-2 text-sm font-medium text-slate-500">
-            <Eye className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+          <li className="flex items-center gap-2 text-sm font-medium text-ink-soft">
+            <Eye className="h-4 w-4 shrink-0 text-ink-faint" aria-hidden />
             Be the first to view — enquire before it sells
           </li>
         ) : null}
         {whatsappClicksWeek > 0 && (
-          <li className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <MessageCircle className="h-4 w-4 shrink-0 text-[#25D366]" aria-hidden />
+          <li className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <MessageCircle className="h-4 w-4 shrink-0 text-whatsapp" aria-hidden />
             {whatsappClicksWeek} WhatsApp {plural(whatsappClicksWeek, "enquiry")} this week
           </li>
         )}

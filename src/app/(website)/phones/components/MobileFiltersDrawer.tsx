@@ -36,12 +36,12 @@ export function MobileFiltersDrawer({ brands }: MobileFiltersDrawerProps) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-slate-200 lg:hidden relative"
+        className="relative flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-surface-hover lg:hidden"
       >
         <SlidersHorizontal className="h-4 w-4" />
         Filters
         {activeFilterCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-sm">
+          <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[10px] font-bold text-white shadow-sm">
             {activeFilterCount}
           </span>
         )}
@@ -50,26 +50,26 @@ export function MobileFiltersDrawer({ brands }: MobileFiltersDrawerProps) {
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex flex-col bg-white lg:hidden">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
-            <h2 className="text-lg font-bold text-slate-900">Filters</h2>
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <h2 className="text-lg font-black text-ink">Filters</h2>
             <button
               onClick={() => setIsOpen(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-hover text-ink transition-colors hover:bg-border"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-5">
             <CatalogueFilters brands={brands} />
           </div>
 
           {/* Footer */}
-          <div className="border-t border-slate-200 p-4">
+          <div className="border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <button
               onClick={() => setIsOpen(false)}
-              className="w-full rounded-2xl bg-black px-6 py-4 text-base font-bold text-white transition-transform hover:scale-[1.02] shadow-xl shadow-black/10"
+              className="btn-dark w-full !min-h-[52px] !rounded-2xl text-base"
             >
               Show Results
             </button>

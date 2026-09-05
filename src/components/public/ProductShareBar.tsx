@@ -61,14 +61,14 @@ export function ProductShareBar({
               trackShare();
               window.open(shareWhatsappUrl, "_blank", "noopener,noreferrer");
             }}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-white px-3 text-xs font-bold text-ink shadow-sm transition-colors hover:bg-surface-hover"
           >
             Share listing
           </a>
           <button
             type="button"
             onClick={() => void copyLink()}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-white px-3 text-xs font-bold text-ink shadow-sm transition-colors hover:bg-surface-hover"
           >
             {copied ? "Copied!" : "Copy link"}
           </button>
@@ -79,7 +79,7 @@ export function ProductShareBar({
               target="_blank"
               rel="noopener noreferrer"
               onClick={trackShare}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-900 bg-slate-900 px-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-black sm:col-span-1 col-span-2"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-ink bg-ink px-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-black sm:col-span-1 col-span-2"
             >
               Status card
             </a>

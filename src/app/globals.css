@@ -34,6 +34,22 @@
   --color-accent-hover: #1d4ed8;
   --color-accent-foreground: #ffffff;
 
+  /*
+    Dedicated "brand" accent for the public storefront.
+    Named distinctly so the shadcn @theme inline block below can NEVER
+    override it (it only remaps shadcn token names). Guarantees a visible
+    accent regardless of light/dark shadcn variables.
+  */
+  --color-brand: #2563eb;
+  --color-brand-hover: #1d4ed8;
+  --color-brand-soft: #eff4ff;
+  --color-brand-foreground: #ffffff;
+
+  /* Dedicated ink scale for reliable public text (not remapped by shadcn) */
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #57585c;
+  --color-ink-faint: #8a8b90;
+
   /* WhatsApp — ONLY for WhatsApp CTAs */
   --color-whatsapp: #25d366;
   --color-whatsapp-hover: #20bd5a;
@@ -247,5 +263,118 @@ body {
   }
   .typography-micro {
     @apply text-xs font-bold tracking-widest uppercase text-muted-foreground;
+  }
+
+  /* ============================================
+     Premium Light "Device Showroom" System
+     Near-black + warm paper-white + one accent
+     Mobile-first: every pattern starts at 360px
+     ============================================ */
+
+  /* Reusable eyebrow label above headings */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-brand;
+  }
+  .eyebrow-dot {
+    @apply inline-block h-1.5 w-1.5 rounded-full bg-brand;
+  }
+
+  /* Signature black pill CTA */
+  .btn-dark {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:scale-[1.03] hover:bg-black hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.35)] active:scale-[0.97] min-h-[44px];
+  }
+  /* Secondary outline CTA */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-border-strong bg-white px-6 py-3.5 text-sm font-bold text-ink transition-all duration-300 hover:border-ink hover:scale-[1.02] active:scale-[0.97] min-h-[44px];
+  }
+  /* WhatsApp CTA — green ONLY here */
+  .btn-whatsapp {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-whatsapp px-6 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-whatsapp-hover hover:scale-[1.03] hover:shadow-[0_12px_30px_-8px_rgba(37,211,102,0.5)] active:scale-[0.97] min-h-[44px];
+  }
+
+  /* Shared "device screen" card surface */
+  .device-card {
+    @apply relative overflow-hidden rounded-[1.75rem] border border-border bg-white shadow-[0_1px_2px_rgb(0,0,0,0.04)];
+  }
+  .device-card-hover {
+    @apply transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-16px_rgba(0,0,0,0.18)] hover:border-border-strong;
+  }
+
+  /* Section heading lockup */
+  .section-head {
+    @apply flex flex-col gap-3;
+  }
+  .section-title {
+    @apply text-[2rem] leading-[1.08] font-black tracking-tight text-ink sm:text-4xl lg:text-5xl;
+  }
+  .section-sub {
+    @apply text-base font-medium leading-relaxed text-ink-soft sm:text-lg;
+  }
+
+  /* Hide scrollbars but keep scroll (mobile snap rows) */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Soft brand glow behind hero device */
+  .brand-glow {
+    background: radial-gradient(closest-side, color-mix(in oklab, var(--color-brand) 22%, transparent), transparent 70%);
+  }
+}
+
+/* ============================================
+   Motion — pure CSS, lightweight, reduced-motion safe
+   ============================================ */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes float-y-sm {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+@layer utilities {
+  .animate-marquee {
+    animation: marquee-x 28s linear infinite;
+  }
+  .animate-marquee-slow {
+    animation: marquee-x 40s linear infinite;
+  }
+  .animate-float {
+    animation: float-y 6s ease-in-out infinite;
+  }
+  .animate-float-sm {
+    animation: float-y-sm 5s ease-in-out infinite;
+  }
+  .animate-pulse-soft {
+    animation: pulse-soft 3s ease-in-out infinite;
+  }
+  .animate-spin-slow {
+    animation: spin-slow 18s linear infinite;
+  }
+  .marquee-mask {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  /* Pause marquee on hover */
+  .group\/marquee:hover .animate-marquee,
+  .group\/marquee:hover .animate-marquee-slow {
+    animation-play-state: paused;
   }
 }

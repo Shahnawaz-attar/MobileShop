@@ -60,15 +60,17 @@ export default async function PhonesPage({
   return (
     <>
       {/* Header Area */}
-      <div className="relative overflow-hidden border-b border-slate-200 bg-[#f5f5f7]">
-        <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(#e5e7eb 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
-        <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-gradient-to-bl from-blue-100 to-purple-50 blur-3xl opacity-60" />
-        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 sm:py-12">
+      <div className="relative overflow-hidden border-b border-border bg-[#f7f8fa]">
+        <div className="pointer-events-none absolute inset-0 -z-0">
+          <div className="brand-glow absolute right-[-8%] top-[-30%] h-[300px] w-[420px] opacity-70" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 sm:py-14">
           <FadeIn direction="up">
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900">
-              Browse at {productsData.total > 0 ? "live" : "our"} stock
+            <span className="eyebrow"><span className="eyebrow-dot" />Live inventory</span>
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-ink sm:text-5xl">
+              Browse our stock
             </h1>
-            <p className="mt-3 text-lg font-medium text-slate-500">
+            <p className="mt-3 max-w-xl text-lg font-medium text-ink-soft">
               {productsData.total} {productsData.total === 1 ? "device" : "devices"} ready to inspect — tap any card for full photos & honest condition.
             </p>
           </FadeIn>
@@ -76,19 +78,19 @@ export default async function PhonesPage({
           {/* Mobile Search & Sort (Desktop uses sidebar for filters, but top for search/sort) */}
           <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="w-full sm:max-w-md">
-              <Suspense fallback={<div className="h-10 animate-pulse rounded-full bg-slate-100" />}>
+              <Suspense fallback={<div className="h-10 animate-pulse rounded-full bg-surface-hover" />}>
                 <SearchInput defaultValue={filters.q} />
               </Suspense>
             </div>
 
             <div className="shrink-0 flex flex-wrap items-center gap-2 sm:gap-4">
-              <Suspense fallback={<div className="h-10 w-24 animate-pulse rounded-2xl bg-slate-100" />}>
+              <Suspense fallback={<div className="h-10 w-24 animate-pulse rounded-full bg-surface-hover" />}>
                 <MobileFiltersDrawer brands={brands} />
               </Suspense>
-              
+
               <div className="flex items-center gap-2">
-                <span className="hidden sm:inline text-sm font-medium text-slate-700">Sort by:</span>
-                <Suspense fallback={<div className="h-10 w-40 animate-pulse rounded-2xl bg-slate-100" />}>
+                <span className="hidden text-sm font-semibold text-ink-soft sm:inline">Sort by:</span>
+                <Suspense fallback={<div className="h-10 w-40 animate-pulse rounded-full bg-surface-hover" />}>
                   <SortSelect defaultValue={filters.sort || "NEWEST"} />
                 </Suspense>
               </div>
@@ -101,22 +103,22 @@ export default async function PhonesPage({
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-[#fbfbfd] min-h-screen">
-        <div className="flex flex-col lg:flex-row gap-10">
-          
+      <main className="mx-auto max-w-7xl min-h-screen bg-white px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-10 lg:flex-row">
+
           {/* Desktop Filters Sidebar */}
           <div className="hidden lg:block lg:w-64 shrink-0">
             <div className="sticky top-8">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="device-card p-6">
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="typography-h4 text-slate-900">Filters</h2>
+                  <h2 className="text-base font-black text-ink">Filters</h2>
                   {(filters.brands || filters.conditions || filters.minPrice || filters.maxPrice) && (
-                    <Link href="/phones" className="text-xs font-semibold text-blue-600 hover:underline">
+                    <Link href="/phones" className="text-xs font-semibold text-brand hover:underline">
                       Clear all
                     </Link>
                   )}
                 </div>
-                <Suspense fallback={<div className="h-40 animate-pulse bg-slate-100 rounded-lg" />}>
+                <Suspense fallback={<div className="h-40 animate-pulse rounded-lg bg-surface-hover" />}>
                   <CatalogueFilters brands={brands} />
                 </Suspense>
               </div>
@@ -126,33 +128,33 @@ export default async function PhonesPage({
           {/* Product Grid */}
           <div className="flex-1">
             {productsData.products.length === 0 ? (
-              <div className="flex h-96 flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white text-center">
+              <div className="flex h-96 flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-white text-center">
                 <span className="text-5xl">🔍</span>
-                <h3 className="typography-h4 mt-6 text-slate-900">No devices found</h3>
-                <p className="typography-body mt-2 max-w-md">
-                  We couldn't find any devices matching your current filters. Try adjusting your search criteria or clear all filters.
+                <h3 className="mt-6 text-xl font-black text-ink">No devices found</h3>
+                <p className="mt-2 max-w-md text-sm font-medium text-ink-soft">
+                  We couldn&apos;t find any devices matching your current filters. Try adjusting your search criteria or clear all filters.
                 </p>
-                <Link href="/phones" className="mt-8 rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 shadow-sm">
+                <Link href="/phones" className="btn-dark mt-8 !min-h-0 px-6 py-2.5 text-sm">
                   Clear all filters
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {productsData.products.map((product, i) => (
                   <FadeIn key={product.id} delay={i * 80}>
                     <PublicProductCard product={product} priority={i < 4} />
                   </FadeIn>
                 ))}
-                
+
                 {/* Client component for pagination */}
-                <LoadMoreCatalogue 
-                  initialNextCursor={productsData.nextCursor} 
+                <LoadMoreCatalogue
+                  initialNextCursor={productsData.nextCursor}
                   filters={filters}
                 />
               </div>
             )}
           </div>
-          
+
         </div>
       </main>
     </>

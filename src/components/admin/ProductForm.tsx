@@ -96,6 +96,7 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
   const [hasCharger, setHasCharger] = useState(product?.hasCharger ?? false);
   const [hasCable, setHasCable] = useState(product?.hasCable ?? false);
   const [hasBill, setHasBill] = useState(product?.hasBill ?? false);
+  const [isHero, setIsHero] = useState(product?.isHero ?? false);
   const [purchasedAt, setPurchasedAt] = useState<Date | undefined>(() =>
     product?.purchasedAt ? normalizeBillMonth(new Date(product.purchasedAt)) : undefined
   );
@@ -143,6 +144,8 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
       hasCable,
       // Stored for all device types; shown on the public product page when hasBill is checked.
       hasBill,
+      // Owner-chosen product shown in the homepage hero 3D showcase.
+      isHero,
       purchasedAt: purchasedAt ? normalizeBillMonth(purchasedAt) : null,
       description: description.trim() || null,
       availability,
@@ -637,6 +640,27 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
             </p>
           )}
         </div>
+      </section>
+
+      {/* Homepage hero showcase */}
+      <section className={sectionClass}>
+        <h2 className="text-base font-semibold text-foreground">Homepage showcase</h2>
+        <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border border-border p-4 transition-colors hover:border-primary/40">
+          <input
+            type="checkbox"
+            checked={isHero}
+            onChange={(e) => setIsHero(e.target.checked)}
+            className="mt-0.5 h-5 w-5 rounded border-input accent-accent"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-foreground">
+              Show this device in the homepage hero
+            </span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              The floating phone at the top of your homepage. Only one device can be selected — choosing this one will automatically unselect any other.
+            </span>
+          </span>
+        </label>
       </section>
 
       {/* Actions */}

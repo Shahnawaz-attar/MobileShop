@@ -62,15 +62,15 @@ export function ActiveFilters({ brands }: ActiveFiltersProps) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 mt-6 lg:hidden">
-      <span className="text-sm font-semibold text-slate-700 mr-2">Active:</span>
-      
+    <div className="mt-6 flex flex-wrap items-center gap-2 lg:hidden">
+      <span className="mr-1 text-sm font-semibold text-ink-faint">Active:</span>
+
       {activeBrands.map(slug => {
         const brandName = brands.find(b => b.slug === slug)?.name || slug;
         return (
-          <span key={`brand-${slug}`} className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
+          <span key={`brand-${slug}`} className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white">
             {brandName}
-            <button onClick={() => removeFilter("brands", slug)} className="rounded-full hover:bg-slate-700 transition-colors">
+            <button onClick={() => removeFilter("brands", slug)} className="rounded-full transition-colors hover:bg-white/20">
               <X className="h-3.5 w-3.5" />
             </button>
           </span>
@@ -78,31 +78,31 @@ export function ActiveFilters({ brands }: ActiveFiltersProps) {
       })}
 
       {activeConditions.map(cond => (
-        <span key={`cond-${cond}`} className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
+        <span key={`cond-${cond}`} className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white">
           {CONDITION_LABELS[cond] || cond}
-          <button onClick={() => removeFilter("conditions", cond)} className="rounded-full hover:bg-slate-700 transition-colors">
+          <button onClick={() => removeFilter("conditions", cond)} className="rounded-full transition-colors hover:bg-white/20">
             <X className="h-3.5 w-3.5" />
           </button>
         </span>
       ))}
 
       {(minPrice || maxPrice) && (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
-          {minPrice && maxPrice 
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white">
+          {minPrice && maxPrice
             ? `₹${Number(minPrice) / 100} - ₹${Number(maxPrice) / 100}`
-            : minPrice 
+            : minPrice
               ? `Over ₹${Number(minPrice) / 100}`
               : `Under ₹${Number(maxPrice) / 100}`
           }
-          <button onClick={removePriceFilter} className="rounded-full hover:bg-slate-700 transition-colors">
+          <button onClick={removePriceFilter} className="rounded-full transition-colors hover:bg-white/20">
             <X className="h-3.5 w-3.5" />
           </button>
         </span>
       )}
-      
-      <button 
+
+      <button
         onClick={clearAll}
-        className="text-xs font-semibold text-blue-600 hover:underline ml-1"
+        className="ml-1 text-xs font-bold text-brand transition-opacity hover:opacity-70"
       >
         Clear
       </button>

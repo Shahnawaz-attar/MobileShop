@@ -14,7 +14,7 @@ export function PublicFooter({ shop, whatsAppHref }: PublicFooterProps) {
   return (
     <footer className="mt-20 bg-[#0a0a0a] text-white overflow-hidden relative">
       {/* Decorative Top Border Glow */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent opacity-50" />
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
       
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 xl:gap-12">

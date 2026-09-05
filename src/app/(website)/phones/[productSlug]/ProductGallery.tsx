@@ -80,8 +80,8 @@ export function ProductGallery({ media }: { media: Media[] }) {
 
   if (media.length === 0) {
     return (
-      <div className="flex aspect-square w-full items-center justify-center rounded-2xl bg-slate-50 border border-slate-200">
-        <div className="text-center text-slate-400">
+      <div className="flex aspect-square w-full items-center justify-center rounded-[2rem] border border-border bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.06),transparent_65%),linear-gradient(180deg,#fafbfc,#f1f3f6)]">
+        <div className="text-center text-ink-faint">
           <span className="text-4xl" aria-hidden="true">📱</span>
           <p className="mt-2 text-sm font-medium">No photos available</p>
         </div>
@@ -94,15 +94,15 @@ export function ProductGallery({ media }: { media: Media[] }) {
   return (
     <div className="flex flex-col gap-4">
       {canSpin && (
-        <div className="flex rounded-full border border-slate-200/80 bg-white p-1 shadow-sm">
+        <div className="flex rounded-full border border-border bg-white p-1 shadow-sm">
           <button
             type="button"
             onClick={() => setViewMode("gallery")}
             className={cn(
               "flex-1 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors",
               viewMode === "gallery"
-                ? "bg-slate-900 text-white"
-                : "text-slate-500 hover:text-slate-800"
+                ? "bg-ink text-white"
+                : "text-ink-soft hover:text-ink"
             )}
           >
             Photos
@@ -116,8 +116,8 @@ export function ProductGallery({ media }: { media: Media[] }) {
             className={cn(
               "flex-1 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors",
               viewMode === "spin"
-                ? "bg-slate-900 text-white"
-                : "text-slate-500 hover:text-slate-800"
+                ? "bg-ink text-white"
+                : "text-ink-soft hover:text-ink"
             )}
           >
             360° spin
@@ -127,7 +127,7 @@ export function ProductGallery({ media }: { media: Media[] }) {
 
       <div
         className={cn(
-          "relative aspect-square w-full overflow-hidden rounded-[2rem] border border-slate-200/50 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-100 via-slate-50 to-white shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] transition-all",
+          "relative aspect-square w-full overflow-hidden rounded-[2rem] border border-border/70 bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.06),transparent_65%),linear-gradient(180deg,#fafbfc,#f1f3f6)] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] transition-all",
           viewMode === "spin" && "cursor-grab active:cursor-grabbing",
           viewMode === "spin" && isDragging && "select-none"
         )}
@@ -201,7 +201,7 @@ export function ProductGallery({ media }: { media: Media[] }) {
             <button
               type="button"
               onClick={() => setActiveIndex((prev) => (prev > 0 ? prev - 1 : media.length - 1))}
-              className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 text-slate-900 shadow-[0_8px_20px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all hover:bg-white hover:scale-110 active:scale-95"
+              className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/85 p-3 text-ink shadow-[0_8px_20px_rgba(0,0,0,0.12)] backdrop-blur-md transition-all hover:bg-white hover:scale-110 active:scale-95"
               aria-label="Previous image"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -209,7 +209,7 @@ export function ProductGallery({ media }: { media: Media[] }) {
             <button
               type="button"
               onClick={() => setActiveIndex((prev) => (prev < media.length - 1 ? prev + 1 : 0))}
-              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 text-slate-900 shadow-[0_8px_20px_rgba(0,0,0,0.1)] backdrop-blur-md transition-all hover:bg-white hover:scale-110 active:scale-95"
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/85 p-3 text-ink shadow-[0_8px_20px_rgba(0,0,0,0.12)] backdrop-blur-md transition-all hover:bg-white hover:scale-110 active:scale-95"
               aria-label="Next image"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
@@ -228,8 +228,8 @@ export function ProductGallery({ media }: { media: Media[] }) {
               className={cn(
                 "relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 snap-center overflow-hidden rounded-2xl transition-all cursor-pointer",
                 activeIndex === idx
-                  ? "border-2 border-slate-900 ring-4 ring-slate-900/10 opacity-100 shadow-md scale-[1.02]"
-                  : "border-2 border-transparent opacity-50 hover:opacity-100 bg-slate-50"
+                  ? "border-2 border-ink ring-4 ring-ink/10 opacity-100 shadow-md scale-[1.02]"
+                  : "border-2 border-transparent opacity-50 hover:opacity-100 bg-surface-hover"
               )}
             >
               <Image
@@ -245,7 +245,7 @@ export function ProductGallery({ media }: { media: Media[] }) {
       )}
 
       {viewMode === "spin" && canSpin && (
-        <p className="text-center text-xs font-medium text-slate-500">
+        <p className="text-center text-xs font-medium text-ink-soft">
           Upload photos in order — front, sides, back — for the smoothest spin.
         </p>
       )}

@@ -39,18 +39,21 @@ export default async function AboutPage() {
   const policyEntries = Object.entries(shop.policies).filter(([, value]) => value.trim().length > 0);
 
   return (
-    <div className="bg-[#f5f5f7]">
-      <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
+    <div className="bg-white">
+      <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
         <FadeIn>
-          <p className="text-sm font-bold uppercase tracking-widest text-slate-500">Visit us</p>
-          <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">
+          <span className="eyebrow"><span className="eyebrow-dot" />About the store</span>
+          <h1 className="mt-3 text-4xl font-black tracking-tight text-ink sm:text-5xl">
             {shop.name}
           </h1>
           {shop.tagline && (
-            <p className="mt-4 text-lg font-medium text-slate-600">{shop.tagline}</p>
+            <p className="mt-4 text-lg font-medium text-ink-soft">{shop.tagline}</p>
           )}
           {shop.yearsInBiz != null && shop.yearsInBiz > 0 && (
-            <p className="mt-2 text-sm font-semibold text-slate-500">
+            <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft">
+              <span className="relative flex h-2 w-2">
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+              </span>
               {shop.yearsInBiz}+ years in business
             </p>
           )}
@@ -61,13 +64,13 @@ export default async function AboutPage() {
             <img
               src={shop.coverUrl}
               alt={`${shop.name} store`}
-              className="mt-10 w-full rounded-3xl object-cover shadow-sm"
+              className="mt-10 w-full rounded-[1.75rem] object-cover shadow-[0_20px_50px_-20px_rgba(0,0,0,0.2)]"
             />
           </FadeIn>
         )}
 
         <FadeIn delay={120}>
-          <div className="mt-10 space-y-4 text-base leading-relaxed text-slate-700">
+          <div className="mt-10 space-y-4 text-base leading-relaxed text-ink-soft">
             <p>
               {shop.about ||
                 `${shop.name} in ${shop.city} sells inspected pre-owned phones. Come to the shop to check a device in person before you buy.`}
@@ -76,9 +79,9 @@ export default async function AboutPage() {
         </FadeIn>
 
         <FadeIn delay={160}>
-          <div className="mt-12 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-slate-900">Address</h2>
-            <p className="mt-3 text-slate-600">
+          <div className="device-card mt-12 p-6 sm:p-8">
+            <h2 className="text-lg font-black text-ink">Address</h2>
+            <p className="mt-3 font-medium text-ink-soft">
               {shop.addressLine1}
               {shop.addressLine2 ? (
                 <>
@@ -94,13 +97,13 @@ export default async function AboutPage() {
                 href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-black px-5 text-sm font-semibold text-white"
+                className="btn-dark !min-h-0 px-5 py-2.5 text-sm"
               >
                 Directions
               </a>
               <a
                 href={`tel:${shop.phone}`}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-900"
+                className="btn-ghost !min-h-0 px-5 py-2.5 text-sm"
               >
                 Call {shop.phone}
               </a>
@@ -108,7 +111,7 @@ export default async function AboutPage() {
                 href={whatsAppHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-900"
+                className="btn-ghost !min-h-0 px-5 py-2.5 text-sm"
               >
                 WhatsApp
               </a>
@@ -117,19 +120,19 @@ export default async function AboutPage() {
         </FadeIn>
 
         <FadeIn delay={200}>
-          <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
-            <h2 className="text-lg font-bold text-slate-900">Hours</h2>
-            <ul className="mt-4 space-y-3 text-sm font-medium text-slate-700">
+          <div className="device-card mt-8 p-6 sm:p-8">
+            <h2 className="text-lg font-black text-ink">Hours</h2>
+            <ul className="mt-4 divide-y divide-border/70">
               {Object.entries(shop.hours).map(([day, time]) => {
                 const val = String(time || "");
-                const isClosed = val.trim() === "";
+                const isClosed = val.trim() === "" || val.includes("Closed");
                 const isHoliday = val.includes("Holiday");
-                let displayTime = val.replace("Holiday|", "").replace("Holiday", "").trim();
+                let displayTime = val.replace(/Holiday\|?/g, "").trim();
                 if (displayTime === "") displayTime = "Closed";
                 return (
-                  <li key={day} className="flex justify-between border-b border-slate-100 pb-3">
-                    <span className="capitalize">{day}</span>
-                    <span className={isClosed || displayTime === "Closed" ? "text-slate-400" : "font-bold"}>
+                  <li key={day} className="flex items-center justify-between py-2.5">
+                    <span className="text-sm font-semibold capitalize text-ink-soft">{day}</span>
+                    <span className={`rounded-lg px-2 py-1 text-xs font-bold tabular-nums ${isClosed ? "bg-ink/5 text-ink-faint" : "bg-ink/5 text-ink"}`}>
                       {isHoliday ? "Holiday · " : ""}
                       {displayTime}
                     </span>
@@ -142,13 +145,13 @@ export default async function AboutPage() {
 
         {policyEntries.length > 0 && (
           <FadeIn delay={240}>
-            <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
-              <h2 className="text-lg font-bold text-slate-900">Policies</h2>
+            <div className="device-card mt-8 p-6 sm:p-8">
+              <h2 className="text-lg font-black text-ink">Policies</h2>
               <dl className="mt-4 space-y-6">
                 {policyEntries.map(([key, value]) => (
                   <div key={key}>
-                    <dt className="text-sm font-bold capitalize text-slate-900">{key.replace(/_/g, " ")}</dt>
-                    <dd className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{value}</dd>
+                    <dt className="text-sm font-bold capitalize text-ink">{key.replace(/_/g, " ")}</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">{value}</dd>
                   </div>
                 ))}
               </dl>
@@ -156,8 +159,8 @@ export default async function AboutPage() {
           </FadeIn>
         )}
 
-        <p className="mt-10 text-center text-sm text-slate-500">
-          <Link href="/phones" className="font-semibold text-slate-900 underline">
+        <p className="mt-10 text-center text-sm font-medium text-ink-soft">
+          <Link href="/phones" className="font-bold text-brand underline underline-offset-4">
             Browse today&apos;s stock
           </Link>
           <span className="mx-2">·</span>

@@ -209,6 +209,8 @@ model Product {
 
   availability Availability @default(DRAFT)
   isFeatured   Boolean      @default(false)
+  /// Owner-chosen product shown in the homepage hero 3D showcase (one at a time)
+  isHero       Boolean      @default(false)
   /// Set only on first transition to AVAILABLE — never invented
   publishedAt  DateTime?
   /// Set when SOLD; cleared if reverted
@@ -241,6 +243,7 @@ model Product {
   @@index([availability, pricePaise])
   @@index([brandId, availability])
   @@index([isFeatured, availability])
+  @@index([isHero])
 }
 
 /// Product image with kind classification and sort order.

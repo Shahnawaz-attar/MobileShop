@@ -58,6 +58,8 @@ const productInputSchema = z.object({
   description: z.string().trim().max(5000).nullable().optional(),
   availability: availabilityEnum.optional(),
   isFeatured: z.boolean().optional(),
+  /** Show this product in the homepage hero 3D showcase. */
+  isHero: z.boolean().optional(),
   internalNotes: z.string().trim().max(5000).nullable().optional(),
   deviceRefLast4: z.string().trim().max(4).nullable().optional(),
   purchasedAt: z.coerce.date().nullable().optional(),
@@ -183,6 +185,7 @@ export async function listAdminProducts(filters: AdminFilters = {}) {
         condition: true,
         availability: true,
         isFeatured: true,
+        isHero: true,
         publishedAt: true,
         soldAt: true,
         createdAt: true,
@@ -214,6 +217,7 @@ export async function listAdminProducts(filters: AdminFilters = {}) {
       condition: p.condition,
       availability: p.availability,
       isFeatured: p.isFeatured,
+      isHero: p.isHero,
       publishedAt: p.publishedAt,
       soldAt: p.soldAt,
       createdAt: p.createdAt,
@@ -382,6 +386,47 @@ export async function listPublicSoldProducts(limit: number = 4) {
 }
 
 /**
+ * Get the product the owner chose to feature in the homepage hero showcase.
+ * Returns null if none is selected.
+ */
+export async function getHeroProduct() {
+  const product = await db.product.findFirst({
+    where: { isHero: true },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      deviceType: true,
+      storageGb: true,
+      colour: true,
+      pricePaise: true,
+      mrpPaise: true,
+      condition: true,
+      availability: true,
+      isFeatured: true,
+      brand: { select: { name: true } },
+      media: {
+        orderBy: { sortOrder: "asc" },
+        take: 1,
+        select: { url: true, alt: true },
+      },
+    },
+  });
+
+  if (!product) return null;
+
+  return {
+    id: product.id,
+    slug: product.slug,
+    title: product.title,
+    deviceType: product.deviceType,
+    pricePaise: product.pricePaise,
+    primaryImageUrl: product.media[0]?.url ?? null,
+    primaryImageAlt: product.media[0]?.alt ?? null,
+  };
+}
+
+/**
  * Get a single product's full detail for the admin edit form.
  */
 export async function getAdminProduct(id: string) {
@@ -418,6 +463,7 @@ export async function getAdminProduct(id: string) {
       description: true,
       availability: true,
       isFeatured: true,
+      isHero: true,
       internalNotes: true,
       deviceRefLast4: true,
       purchasedAt: true,
@@ -604,6 +650,7 @@ export async function createProduct(input: ProductInput) {
       description: parsed.description ?? null,
       availability,
       isFeatured: parsed.isFeatured ?? false,
+      isHero: parsed.isHero ?? false,
       publishedAt,
       soldAt,
       internalNotes: parsed.internalNotes ?? null,
@@ -614,6 +661,14 @@ export async function createProduct(input: ProductInput) {
     },
     select: { id: true, slug: true, title: true },
   });
+
+  // Only one product can be the homepage hero — clear any others.
+  if (parsed.isHero) {
+    await db.product.updateMany({
+      where: { id: { not: product.id }, isHero: true },
+      data: { isHero: false },
+    });
+  }
 
   if (availability === "AVAILABLE") {
     await notifyProductListed({ title: product.title, slug: product.slug });
@@ -631,13 +686,11 @@ export async function updateProduct(id: string, input: ProductInput) {
 
   const existing = await db.product.findUnique({
     where: { id },
-    select: { id: true, availability: true, publishedAt: true },
+    select: { id: true, availability: true, publishedAt: true, isHero: true },
   });
   if (!existing) {
     throw new Error("Product not found");
   }
-
-  // Validate brand exists
   const brand = await db.brand.findUnique({ where: { id: parsed.brandId }, select: { id: true } });
   if (!brand) {
     throw new Error("Brand not found");
@@ -711,6 +764,7 @@ export async function updateProduct(id: string, input: ProductInput) {
       description: parsed.description ?? null,
       availability: newAvailability,
       isFeatured: parsed.isFeatured ?? false,
+      isHero: parsed.isHero ?? existing.isHero,
       publishedAt,
       soldAt,
       internalNotes: parsed.internalNotes ?? null,
@@ -721,6 +775,14 @@ export async function updateProduct(id: string, input: ProductInput) {
     },
     select: { id: true, slug: true, title: true },
   });
+
+  // Only one product can be the homepage hero — clear any others when this one is promoted.
+  if (parsed.isHero) {
+    await db.product.updateMany({
+      where: { id: { not: product.id }, isHero: true },
+      data: { isHero: false },
+    });
+  }
 
   if (existing.availability !== "AVAILABLE" && newAvailability === "AVAILABLE") {
     await notifyProductListed({ title: product.title, slug: product.slug });

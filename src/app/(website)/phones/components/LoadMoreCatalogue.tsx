@@ -48,11 +48,11 @@ export function LoadMoreCatalogue({ initialNextCursor, filters }: LoadMoreCatalo
       
       {nextCursor && (
         <div className="col-span-1 mt-8 flex flex-col items-center justify-center sm:col-span-2 lg:col-span-3">
-          {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
+          {error && <p className="mb-4 text-sm text-error">{error}</p>}
           <button
             onClick={handleLoadMore}
             disabled={isLoading}
-            className="rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-dark !min-h-0 px-8 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "Loading..." : "Load More"}
           </button>

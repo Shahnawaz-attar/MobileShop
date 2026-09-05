@@ -149,6 +149,7 @@ export interface AdminProductCard {
   condition: Condition;
   availability: Availability;
   isFeatured: boolean;
+  isHero: boolean;
   publishedAt: Date | null;
   soldAt: Date | null;
   createdAt: Date;
@@ -190,6 +191,7 @@ export interface AdminProductDetail {
   description: string | null;
   availability: Availability;
   isFeatured: boolean;
+  isHero: boolean;
   internalNotes: string | null;
   deviceRefLast4: string | null;
   purchasedAt: Date | null;
@@ -234,6 +236,7 @@ export interface CreateProductInput {
   description?: string | null;
   availability?: Availability;
   isFeatured?: boolean;
+  isHero?: boolean;
   internalNotes?: string | null;
   deviceRefLast4?: string | null;
   purchasedAt?: Date | null;
