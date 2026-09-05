@@ -126,14 +126,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {/* Client-side tracking component (avoids cache issues) */}
       <ProductViewTracker productId={product.id} />
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 bg-[#f5f5f7] min-h-screen">
+      <main
+        className={`mx-auto max-w-6xl px-4 py-6 sm:py-8 sm:px-6 lg:px-8 bg-[#f5f5f7] min-h-screen ${
+          product.availability === "AVAILABLE" ? "pb-28 lg:pb-8" : ""
+        }`}
+      >
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
           
           <FadeIn direction="up" className="lg:sticky lg:top-8 lg:h-max">
             <ProductGallery media={product.media} />
           </FadeIn>
 
-          <FadeIn direction="up" delay={100} className="flex flex-col">
+          <FadeIn direction="up" delay={100} className="flex flex-col overflow-visible">
             {/* Badges */}
             <div className="mb-6 flex flex-wrap gap-3">
               <span className="inline-flex items-center rounded-full bg-white px-4 py-1.5 text-xs font-bold text-slate-700 shadow-sm border border-slate-200/50">
@@ -154,7 +158,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {CONDITION_DESCRIPTIONS[product.condition]}
             </p>
 
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-6xl leading-[1.1] mb-4">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl lg:text-5xl leading-[1.15] mb-3 sm:mb-4">
               {product.title}
             </h1>
             
@@ -162,16 +166,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {product.brand.name} {product.model?.name ? <span className="text-slate-300 mx-2">•</span> : ""} {product.model?.name}
             </p>
 
-            <div className="mt-8 flex items-baseline gap-4 border-b border-slate-200/60 pb-8">
-              <span className="text-5xl font-black tracking-tight text-slate-900">
+            <div className="mt-6 sm:mt-8 flex flex-wrap items-end gap-x-3 gap-y-2 border-b border-slate-200/60 pb-6 sm:pb-8">
+              <span className="text-4xl sm:text-5xl font-black tracking-tight leading-none text-slate-900">
                 {formatINR(product.pricePaise)}
               </span>
               {product.mrpPaise && product.mrpPaise > product.pricePaise && (
-                <div className="flex flex-col">
-                  <span className="text-xl font-semibold text-slate-400 line-through">
+                <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-start">
+                  <span className="text-lg sm:text-xl font-semibold text-slate-400 line-through">
                     {formatINR(product.mrpPaise)}
                   </span>
-                  <span className="mt-1 inline-flex items-center rounded-md bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700 shadow-sm border border-green-200/50">
+                  <span className="inline-flex items-center rounded-md bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700 shadow-sm border border-green-200/50">
                     {discount}% OFF
                   </span>
                 </div>
@@ -183,6 +187,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
               viewCount={product.viewCount}
               whatsappClicksWeek={product.whatsappClicksWeek}
             />
+
+            {product.availability === "AVAILABLE" && (
+              <div className="mt-6 lg:hidden">
+                <ProductShareBar
+                  mode="secondary-only"
+                  productId={product.id}
+                  productUrl={productUrl}
+                  whatsappUrl={whatsappUrl}
+                  shareWhatsappUrl={shareWhatsappUrl}
+                  statusImageUrl={statusImageUrl}
+                />
+              </div>
+            )}
 
             {/* Key Specifications Grid */}
             <div className="mt-10">
@@ -269,8 +286,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
       </main>
 
       {product.availability === "AVAILABLE" && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/80 bg-white/90 p-4 backdrop-blur-xl sm:px-6 lg:static lg:mt-10 lg:border-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-          <div className="mx-auto max-w-5xl">
+        <>
+          <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/80 bg-white/95 p-3 backdrop-blur-xl pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+            <div className="mx-auto max-w-6xl px-1">
+              <ProductShareBar
+                mode="whatsapp-only"
+                productId={product.id}
+                productUrl={productUrl}
+                whatsappUrl={whatsappUrl}
+                shareWhatsappUrl={shareWhatsappUrl}
+                statusImageUrl={statusImageUrl}
+              />
+            </div>
+          </div>
+          <div className="hidden lg:block mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-8">
             <ProductShareBar
               productId={product.id}
               productUrl={productUrl}
@@ -279,7 +308,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               statusImageUrl={statusImageUrl}
             />
           </div>
-        </div>
+        </>
       )}
     </>
   );

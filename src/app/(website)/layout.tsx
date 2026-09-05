@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FloatingWhatsApp } from "@/components/public/FloatingWhatsApp";
 import { QrScanTracker } from "@/components/public/QrScanTracker";
 import { StockAlertSubscribe } from "@/components/public/StockAlertSubscribe";
+import { RouteChangeLoader } from "@/components/shared/RouteChangeLoader";
 
 export default async function WebsiteLayout({
   children,
@@ -35,6 +36,7 @@ export default async function WebsiteLayout({
       </div>
 
       <PublicNavbar shopName={shop.name} logoUrl={shop.logoUrl} />
+      <RouteChangeLoader />
       <main className="flex-grow">{children}</main>
       <PublicFooter shop={shop} whatsAppHref={whatsAppHref} />
       

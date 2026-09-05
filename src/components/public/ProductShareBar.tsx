@@ -9,6 +9,8 @@ interface ProductShareBarProps {
   whatsappUrl: string;
   shareWhatsappUrl: string;
   statusImageUrl?: string;
+  /** Mobile: split sticky WhatsApp vs in-page share actions */
+  mode?: "all" | "whatsapp-only" | "secondary-only";
 }
 
 export function ProductShareBar({
@@ -17,6 +19,7 @@ export function ProductShareBar({
   whatsappUrl,
   shareWhatsappUrl,
   statusImageUrl,
+  mode = "all",
 }: ProductShareBarProps) {
   const [copied, setCopied] = useState(false);
   const [, startTransition] = useTransition();
@@ -34,52 +37,59 @@ export function ProductShareBar({
     window.setTimeout(() => setCopied(false), 2000);
   }
 
+  const showWhatsApp = mode === "all" || mode === "whatsapp-only";
+  const showSecondary = mode === "all" || mode === "secondary-only";
+
   return (
     <div className="flex flex-col gap-3">
-      <a
-        href={whatsappUrl}
-        onClick={(e) => {
-          e.preventDefault();
-          startTransition(() => {
-            void trackEventAction({ type: "WHATSAPP_CLICK", productId });
-          });
-          window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-        }}
-        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 text-base font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-95"
-      >
-        Enquire on WhatsApp
-      </a>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {showWhatsApp && (
         <a
-          href={shareWhatsappUrl}
+          href={whatsappUrl}
           onClick={(e) => {
             e.preventDefault();
-            trackShare();
-            window.open(shareWhatsappUrl, "_blank", "noopener,noreferrer");
+            startTransition(() => {
+              void trackEventAction({ type: "WHATSAPP_CLICK", productId });
+            });
+            window.open(whatsappUrl, "_blank", "noopener,noreferrer");
           }}
-          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 text-base font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-95"
         >
-          Share listing
+          Enquire on WhatsApp
         </a>
-        <button
-          type="button"
-          onClick={() => void copyLink()}
-          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
-        >
-          {copied ? "Copied!" : "Copy link"}
-        </button>
-        {statusImageUrl && (
+      )}
+      {showSecondary && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <a
-            href={statusImageUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={trackShare}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-900 bg-slate-900 px-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-black sm:col-span-1 col-span-2"
+            href={shareWhatsappUrl}
+            onClick={(e) => {
+              e.preventDefault();
+              trackShare();
+              window.open(shareWhatsappUrl, "_blank", "noopener,noreferrer");
+            }}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
           >
-            Status card
+            Share listing
           </a>
-        )}
-      </div>
+          <button
+            type="button"
+            onClick={() => void copyLink()}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+          >
+            {copied ? "Copied!" : "Copy link"}
+          </button>
+          {statusImageUrl && (
+            <a
+              href={statusImageUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={trackShare}
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-900 bg-slate-900 px-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-black sm:col-span-1 col-span-2"
+            >
+              Status card
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 }

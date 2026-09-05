@@ -41,21 +41,23 @@ export function ProductEngagement({
   }
 
   return (
-    <div className="mt-6 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgb(0,0,0,0.04)]">
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+    <div className="relative mt-6 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgb(0,0,0,0.04)]">
+      {fresh && (
+        <span className="absolute top-4 right-4 rounded-full bg-orange-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-orange-700">
+          Fresh
+        </span>
+      )}
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 pr-16">
         Live interest
       </p>
       <ul className="space-y-2">
         {publishedDate && (
-          <li className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <Clock className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-            Listed {publishedDate}
-            {listedAgo ? <span className="font-medium text-slate-500">· {listedAgo}</span> : null}
-            {fresh && (
-              <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-orange-700">
-                Fresh
-              </span>
-            )}
+          <li className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-slate-700">
+            <span className="inline-flex items-center gap-2">
+              <Clock className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+              Listed {publishedDate}
+            </span>
+            {listedAgo ? <span className="font-medium text-slate-500">{listedAgo}</span> : null}
           </li>
         )}
         {viewCount > 0 ? (
