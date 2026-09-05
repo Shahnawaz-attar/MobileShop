@@ -5,6 +5,7 @@ import { getShop } from "@/server/modules/shop";
 import { formatINR } from "@/lib/money";
 import { CONDITION_LABELS } from "@/lib/constants";
 import { buildWhatsAppLink, generateProductEnquiryText } from "@/lib/whatsapp";
+import { resolvePublicAppUrl } from "@/lib/qr";
 import { ProductGallery } from "./ProductGallery";
 import { WhatsAppCTA } from "./WhatsAppCTA";
 import { ProductViewTracker } from "./ProductViewTracker";
@@ -63,11 +64,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Generate WhatsApp Link
-  // Note: in a real environment we'd use headers() to get the host for the URL, 
-  // but for now we'll just pass a relative/placeholder URL to the utility
-  const url = `https://${shop.slug}.mobileshop.com/phones/${product.slug}`; 
-  const waText = generateProductEnquiryText(product, url);
+  const productUrl = `${resolvePublicAppUrl()}/phones/${product.slug}`;
+  const waText = generateProductEnquiryText(product, productUrl);
   const whatsappUrl = buildWhatsAppLink(shop.whatsapp, waText);
 
   const discount = product.mrpPaise && product.mrpPaise > product.pricePaise
@@ -90,7 +88,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     },
     "offers": {
       "@type": "Offer",
-      "url": "",
+      "url": productUrl,
       "priceCurrency": "INR",
       "price": product.pricePaise / 100,
       "itemCondition": "https://schema.org/UsedCondition",

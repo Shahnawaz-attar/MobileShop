@@ -1,8 +1,9 @@
 import { MetadataRoute } from "next";
 import { db } from "@/server/db/client";
+import { resolvePublicAppUrl } from "@/lib/qr";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  const baseUrl = resolvePublicAppUrl();
 
   // Fetch all active products
   const products = await db.product.findMany({
@@ -34,6 +35,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "hourly",
       priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
     },
     ...productUrls,
   ];

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { TimePicker } from "@/components/ui/time-picker";
 import { Building2, Phone, MapPin, Clock, ShieldCheck, Mail, Instagram, Facebook, Link as LinkIcon, ImageIcon } from "lucide-react";
 import { ShopLogoUpload } from "@/components/admin/ShopLogoUpload";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 interface ShopSettingsFormProps {
   shop: Shop;
@@ -202,6 +203,14 @@ export function ShopSettingsForm({ shop }: ShopSettingsFormProps) {
             <label htmlFor="shop-whatsapp" className={labelClass}>WhatsApp *</label>
             <LinkIcon className="absolute left-4 top-[38px] h-4 w-4 text-muted-foreground" />
             <input id="shop-whatsapp" type="tel" required value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className={`${inputClass} pl-11`} placeholder="+919876543210" />
+            <a
+              href={buildWhatsAppLink(whatsapp, "Test from my shop website. If you received this, WhatsApp is set correctly.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline"
+            >
+              Send yourself a WhatsApp test
+            </a>
           </div>
 
           <div className="relative sm:col-span-2">

@@ -61,7 +61,10 @@ export default async function AdminDashboardPage() {
           Dashboard
         </h1>
         <p className="mt-2 text-base text-muted-foreground">
-          Welcome back! Here's your shop overview.
+          Welcome back! Here&apos;s your shop overview.
+        </p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          On Android Chrome: menu → <strong>Add to Home screen</strong> to install the admin. Admin pages are never cached offline.
         </p>
       </div>
 

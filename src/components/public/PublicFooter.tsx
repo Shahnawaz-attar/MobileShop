@@ -62,6 +62,7 @@ export function PublicFooter({ shop, whatsAppHref }: PublicFooterProps) {
             <h3 className="text-sm font-bold text-white tracking-widest uppercase mb-6">Shop</h3>
             <ul className="space-y-4 text-sm font-medium text-slate-400">
               <li><Link href="/phones" className="hover:text-white transition-colors inline-flex items-center group">All Devices <span className="ml-1 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">&rarr;</span></Link></li>
+              <li><Link href="/about" className="hover:text-white transition-colors inline-flex items-center group">About <span className="ml-1 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">&rarr;</span></Link></li>
               <li><Link href="/phones?brands=apple" className="hover:text-white transition-colors inline-flex items-center group">Apple iPhones <span className="ml-1 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">&rarr;</span></Link></li>
               <li><Link href="/phones?brands=samsung" className="hover:text-white transition-colors inline-flex items-center group">Samsung Galaxy <span className="ml-1 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">&rarr;</span></Link></li>
             </ul>

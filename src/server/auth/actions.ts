@@ -1,8 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import { signIn, signOut } from "@/server/auth";
 import { z } from "zod";
 import type { ActionResult } from "@/types";
+import { RATE_LIMITS } from "@/lib/constants";
+import { isRateLimited, recordAttempt } from "@/lib/rate-limit";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -27,6 +30,22 @@ export async function loginAction(
     };
   }
 
+  const headerStore = await headers();
+  const ip =
+    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headerStore.get("x-real-ip") ||
+    "unknown";
+  const limitKey = `login:${ip}:${parsed.data.email.toLowerCase()}`;
+  const windowMs = RATE_LIMITS.LOGIN_WINDOW_MINUTES * 60 * 1000;
+
+  if (isRateLimited(limitKey, RATE_LIMITS.LOGIN_ATTEMPTS)) {
+    return {
+      success: false,
+      error: "Too many login attempts. Try again in 15 minutes.",
+      code: "RATE_LIMITED",
+    };
+  }
+
   try {
     await signIn("credentials", {
       email: parsed.data.email,
@@ -42,6 +61,8 @@ export async function loginAction(
     if (error instanceof Error && error.message === "NEXT_REDIRECT") {
       throw error;
     }
+
+    recordAttempt(limitKey, windowMs);
 
     return {
       success: false,

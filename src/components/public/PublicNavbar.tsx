@@ -42,6 +42,9 @@ export function PublicNavbar({ shopName, logoUrl }: PublicNavbarProps) {
             <Link href="/phones" className="text-sm font-bold text-slate-500 transition-all hover:text-slate-900 hover:-translate-y-0.5">
               All Devices
             </Link>
+            <Link href="/about" className="text-sm font-bold text-slate-500 transition-all hover:text-slate-900 hover:-translate-y-0.5">
+              About
+            </Link>
             <Link href="/phones?brands=apple" className="text-sm font-bold text-slate-500 transition-all hover:text-slate-900 hover:-translate-y-0.5">
               iPhones
             </Link>
@@ -111,6 +114,14 @@ export function PublicNavbar({ shopName, logoUrl }: PublicNavbarProps) {
             >
               <span>All Devices</span>
               <span className="text-slate-400 group-hover:text-slate-900 group-hover:translate-x-1 transition-all">&rarr;</span>
+            </Link>
+            <Link 
+              href="/about" 
+              className="group flex items-center justify-between rounded-2xl p-4 text-2xl font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all" 
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span>About</span>
+              <span className="text-slate-300 group-hover:text-slate-900 group-hover:translate-x-1 transition-all">&rarr;</span>
             </Link>
             <Link 
               href="/phones?brands=apple" 

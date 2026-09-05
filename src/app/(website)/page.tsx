@@ -5,6 +5,7 @@ import { listPublicProducts, listBrands, listPublicSoldProducts } from "@/server
 import { getShop, toPublicShopInfo } from "@/server/modules/shop";
 import { listPublicTestimonials } from "@/server/modules/content";
 import { FadeIn } from "@/components/shared/FadeIn";
+import { resolvePublicAppUrl } from "@/lib/qr";
 
 export async function generateMetadata(): Promise<Metadata> {
   const shop = await getShop();
@@ -40,6 +41,7 @@ export default async function HomePage() {
   ]);
 
   const shop = toPublicShopInfo(rawShop);
+  const siteUrl = resolvePublicAppUrl();
 
   const fullAddress = [shop.addressLine1, shop.addressLine2, `${shop.city}, ${shop.state} ${shop.pincode}`]
     .filter(Boolean)
@@ -52,8 +54,8 @@ export default async function HomePage() {
     "@type": "LocalBusiness",
     "name": shop.name,
     "image": shop.logoUrl ? [shop.logoUrl] : [],
-    "@id": "",
-    "url": "",
+    "@id": `${siteUrl}/#business`,
+    "url": siteUrl,
     "telephone": shop.phone || "",
     "address": {
       "@type": "PostalAddress",
@@ -63,11 +65,9 @@ export default async function HomePage() {
       "postalCode": shop.pincode || "",
       "addressCountry": "IN"
     },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": shop.lat || 0,
-      "longitude": shop.lng || 0
-    },
+    ...(shop.lat != null && shop.lng != null
+      ? { geo: { "@type": "GeoCoordinates", latitude: shop.lat, longitude: shop.lng } }
+      : {}),
     "openingHoursSpecification": Object.entries(shop.hours || {}).map(([day, time]) => ({
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": [day.charAt(0).toUpperCase() + day.slice(1)],

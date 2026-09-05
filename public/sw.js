@@ -8,7 +8,7 @@
  * - Admin → NEVER cache
  */
 
-const CACHE_NAME = "mobileshop-v1";
+const CACHE_NAME = "mobileshop-v2";
 const STATIC_ASSETS = [
   "/",
   "/offline.html",
@@ -51,6 +51,11 @@ self.addEventListener("fetch", (event) => {
 
   // NEVER cache admin routes
   if (url.pathname.startsWith("/admin")) {
+    return;
+  }
+
+  // Product details — network-only (stale sold/price must not linger)
+  if (url.pathname.startsWith("/phones/") && url.pathname !== "/phones/") {
     return;
   }
 

@@ -291,7 +291,7 @@ Do NOT add these unless explicitly required by a future spec:
 - [x] Announcement + testimonial admin CRUD (`/admin/content`, `src/server/modules/content`)
 - [x] Homepage + layout pull shop data from DB (name, address, hours, policies, logos)
 - [x] WhatsApp number and floating CTA from Shop settings
-- [ ] "Send yourself a WhatsApp test" workflow (still missing)
+- [x] "Send yourself a WhatsApp test" on shop settings
 
 ### Phase 9 — Analytics + Insights ⬜ PARTIAL
 - [x] `recordEvent` + `trackEventAction` (`PRODUCT_VIEW`, `WHATSAPP_CLICK`)
@@ -302,20 +302,20 @@ Do NOT add these unless explicitly required by a future spec:
 - [x] Week totals for CALL / SEARCH / DIRECTIONS / SHARE / QR (tracking still only on views + WhatsApp)
 - [ ] Crawler filtering + session hashing (spec §23)
 
-### Phase 10 — SEO + OG + Sitemap ⬜ PARTIAL
+### Phase 10 — SEO + OG + Sitemap ✅ COMPLETE
 - [x] `generateMetadata` on home, browse, product detail (city in title, canonicals)
-- [x] `sitemap.ts` (home, `/phones`, live/reserved products)
+- [x] `sitemap.ts` (home, `/phones`, `/about`, live/reserved products)
 - [x] `robots.ts` (disallow `/admin/` and `/api/`)
 - [x] LocalBusiness JSON-LD on home; Product JSON-LD on PDP
 - [x] Dynamic product OG image (`/api/og/product`)
-- [ ] Public `/about` page (spec §11)
-- [ ] Search Console onboarding docs
-- [ ] JSON-LD `@id` / `url` currently empty strings on home
+- [x] Public `/about` page (story, hours, address, policies, contacts)
+- [x] Search Console steps in `docs/01_ONBOARDING.md`
+- [x] JSON-LD `@id` / `url` / offer URL from public site origin
 
-### Phase 11 — PWA ⬜ PARTIAL (started in Phase 4)
+### Phase 11 — PWA ✅ COMPLETE
 - [x] `manifest.webmanifest`, SVG icons, `sw.js`, `offline.html`, SW registration
-- [ ] Verify network-first catalogue vs cache-first assets; confirm admin is never cached
-- [ ] Install prompt / “Add to Home Screen” owner guidance
+- [x] Network-first navigations; cache-first assets/images; product detail network-only; admin never cached
+- [x] Add-to-Home-Screen note on admin dashboard
 
 ### Phase 12 — QR ✅ COMPLETE
 - [x] Shop QR PNG (`/api/qr.png`, error correction H, `utm_source=qr`)
@@ -323,23 +323,19 @@ Do NOT add these unless explicitly required by a future spec:
 - [x] `QR_SCAN` when a visitor lands with `utm_source=qr`
 - [ ] Optional extra variants (packaging sticker) — not needed for V1 counter QR
 
-### Phase 13 — Security + Performance + Docs ⬜ NOT STARTED
-- [ ] Login rate limit (5 / 15 min)
-- [ ] Unit + integration + Playwright journeys (spec §21)
-- [ ] Lighthouse gate on public pages
-- [ ] Deployment / onboarding docs (`docs/01_ONBOARDING.md`, `docs/02_DEPLOYMENT.md`)
-- [ ] Backup/restore process for a paying shop
+### Phase 13 — Security + Performance + Docs ⬜ PARTIAL
+- [x] Login rate limit (5 / 15 min per IP + email)
+- [ ] Automated tests skipped (owner decision)
+- [x] Onboarding + Search Console (`docs/01_ONBOARDING.md`)
+- [x] Deployment + backups (`docs/02_DEPLOYMENT.md`)
 
-### Phase 14 — First real shop onboarding ⬜ NOT STARTED
-- [ ] Collect real shop data (spec §20)
-- [ ] Replace demo seed content
-- [ ] Change demo password; verify WhatsApp, Call, maps, hours, SSL, sold flow
-- [ ] Owner can add → photo → publish → share → mark sold in ~90s on Android
+### Phase 14 — First real shop onboarding ⬜ CHECKLIST IN DOCS
+- [x] Handover checklist written in `docs/01_ONBOARDING.md`
+- [ ] Collect real shop data and replace demo seed on a live customer (not in this repo)
 
 ### Recommended next (sellable V1)
-1. About page + SEO leftovers (Phase 10)
-2. WhatsApp self-test on shop settings
-3. Tests, rate limit, deployment docs, then first shop (Phases 13–14)
+1. Onboard a real shop using `docs/01_ONBOARDING.md` (replace demo content, change password)
+2. Optional later: photo resize/kinds, extra analytics events
 
 ---
 
