@@ -5,6 +5,7 @@ import { db } from "@/server/db/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/types";
+import { notifyAnnouncementLive } from "@/server/modules/notify";
 
 // ─── Schemas ────────────────────────────────────────────────────────
 
@@ -47,6 +48,9 @@ export async function createAnnouncementAction(
     });
 
     revalidatePath("/", "layout");
+    if (announcement.isActive) {
+      await notifyAnnouncementLive({ title: announcement.title });
+    }
     return { success: true, data: { id: announcement.id } };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -66,6 +70,11 @@ export async function updateAnnouncementAction(
     await requireOwner();
     const parsed = AnnouncementSchema.parse(input);
 
+    const existing = await db.announcement.findUnique({
+      where: { id },
+      select: { isActive: true },
+    });
+
     const announcement = await db.announcement.update({
       where: { id },
       data: {
@@ -80,6 +89,9 @@ export async function updateAnnouncementAction(
     });
 
     revalidatePath("/", "layout");
+    if (!existing?.isActive && announcement.isActive) {
+      await notifyAnnouncementLive({ title: announcement.title });
+    }
     return { success: true, data: { id: announcement.id } };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -111,8 +123,15 @@ export async function toggleAnnouncementAction(
 ): Promise<ActionResult<null>> {
   try {
     await requireOwner();
-    await db.announcement.update({ where: { id }, data: { isActive } });
+    const announcement = await db.announcement.update({
+      where: { id },
+      data: { isActive },
+      select: { title: true },
+    });
     revalidatePath("/", "layout");
+    if (isActive) {
+      await notifyAnnouncementLive({ title: announcement.title });
+    }
     return { success: true, data: null };
   } catch (error) {
     console.error("toggleAnnouncementAction error:", error);

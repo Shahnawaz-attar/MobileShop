@@ -1,4 +1,5 @@
 import { db } from "@/server/db/client";
+import { notifyProductListed } from "@/server/modules/notify";
 import { z } from "zod";
 import { buildProductSlug, slugify } from "@/lib/slug";
 import { deleteProductMedia } from "@/server/modules/media";
@@ -572,6 +573,10 @@ export async function createProduct(input: ProductInput) {
     select: { id: true, slug: true, title: true },
   });
 
+  if (availability === "AVAILABLE") {
+    await notifyProductListed({ title: product.title, slug: product.slug });
+  }
+
   return product;
 }
 
@@ -673,6 +678,10 @@ export async function updateProduct(id: string, input: ProductInput) {
     select: { id: true, slug: true, title: true },
   });
 
+  if (existing.availability !== "AVAILABLE" && newAvailability === "AVAILABLE") {
+    await notifyProductListed({ title: product.title, slug: product.slug });
+  }
+
   return product;
 }
 
@@ -714,8 +723,12 @@ export async function setAvailability(id: string, availability: Availability) {
       publishedAt,
       soldAt,
     },
-    select: { id: true, slug: true, availability: true },
+    select: { id: true, slug: true, title: true, availability: true },
   });
+
+  if (existing.availability !== "AVAILABLE" && parsed === "AVAILABLE") {
+    await notifyProductListed({ title: product.title, slug: product.slug });
+  }
 
   return { ...product, previous: existing.availability };
 }

@@ -78,6 +78,13 @@ enum EventType {
   QR_SCAN
 }
 
+/// Manual shop ping vs automatic product-live ping (separate daily caps).
+enum PushBroadcastKind {
+  MANUAL
+  PRODUCT
+  ANNOUNCEMENT
+}
+
 // --- Models ---
 
 /// The singleton shop identity for this deployment.
@@ -288,4 +295,26 @@ model AnalyticsEvent {
 
   @@index([type, createdAt])
   @@index([productId, type])
+}
+
+/// Browser Web Push subscription (PWA). One shop per database.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+}
+
+/// Owner-sent or automatic stock alert. Caps are per kind in application code.
+model PushBroadcast {
+  id        String            @id @default(cuid())
+  kind      PushBroadcastKind @default(MANUAL)
+  title     String
+  body      String
+  sentCount Int               @default(0)
+  createdAt DateTime          @default(now())
+
+  @@index([createdAt])
+  @@index([kind, createdAt])
 }

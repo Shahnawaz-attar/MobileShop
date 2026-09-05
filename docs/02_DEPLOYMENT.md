@@ -16,9 +16,12 @@ CLOUDINARY_API_SECRET=
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
 ANALYTICS_SALT=       # openssl rand -hex 16
 ALLOW_SEED=false
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:owner@shop.com
 ```
 
-`NEXT_PUBLIC_*` is baked in at **build** time. After changing `NEXT_PUBLIC_APP_URL`, redeploy.
+`NEXT_PUBLIC_*` is baked in at **build** time. After changing `NEXT_PUBLIC_APP_URL` or `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, redeploy. Generate keys with `npx web-push generate-vapid-keys`.
 
 ## Database
 

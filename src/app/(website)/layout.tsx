@@ -5,6 +5,7 @@ import { getActiveAnnouncement } from "@/server/modules/content";
 import Link from "next/link";
 import { FloatingWhatsApp } from "@/components/public/FloatingWhatsApp";
 import { QrScanTracker } from "@/components/public/QrScanTracker";
+import { StockAlertSubscribe } from "@/components/public/StockAlertSubscribe";
 
 export default async function WebsiteLayout({
   children,
@@ -39,6 +40,7 @@ export default async function WebsiteLayout({
       
       {/* WhatsApp CTA — uses real shop number from DB */}
       <QrScanTracker />
+      <StockAlertSubscribe vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY} />
       <FloatingWhatsApp href={whatsAppHref} shopName={shop.name} />
     </div>
   );

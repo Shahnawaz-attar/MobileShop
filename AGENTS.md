@@ -143,7 +143,7 @@ mobile-shop-template-1/
 │   │       ├── content/         # Announcements + testimonials
 │   │       ├── media/           # Cloudinary signed upload + attach/reorder/delete
 │   │       ├── analytics/       # Event tracking + summaries
-│   │       └── notify/          # Notification stubs
+│   │       └── notify/          # Web Push subscribe + owner stock broadcasts
 │   ├── lib/
 │   │   ├── env.ts               # Zod-validated env vars
 │   │   ├── money.ts             # INR formatting, paise conversion
@@ -316,6 +316,7 @@ Do NOT add these unless explicitly required by a future spec:
 - [x] `manifest.webmanifest`, SVG icons, `sw.js`, `offline.html`, SW registration
 - [x] Network-first navigations; cache-first assets/images; product detail network-only; admin never cached
 - [x] Add-to-Home-Screen note on admin dashboard
+- [x] Web Push: auto ping on AVAILABLE (own daily cap) + shop alerts/banners 50/day
 
 ### Phase 12 — QR ✅ COMPLETE
 - [x] Shop QR PNG (`/api/qr.png`, error correction H, `utm_source=qr`)
@@ -334,8 +335,9 @@ Do NOT add these unless explicitly required by a future spec:
 - [ ] Collect real shop data and replace demo seed on a live customer (not in this repo)
 
 ### Recommended next (sellable V1)
-1. Onboard a real shop using `docs/01_ONBOARDING.md` (replace demo content, change password)
-2. Optional later: photo resize/kinds, extra analytics events
+1. Put VAPID keys on Vercel and redeploy so the live demo “Notify me” button works
+2. Onboard a real shop using `docs/01_ONBOARDING.md` (replace demo content, change password)
+3. Optional later: photo resize/kinds, extra analytics events
 
 ---
 

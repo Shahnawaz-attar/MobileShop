@@ -13,6 +13,7 @@ import {
   LogOut,
   FileText,
   QrCode,
+  Bell,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/admin/content", label: "Content", icon: FileText },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/qr", label: "QR", icon: QrCode },
+  { href: "/admin/notify", label: "Stock alerts", icon: Bell },
 ] as const;
 
 export function AdminSidebar({ ownerName, ownerEmail, shopName, dashboardLogoUrl }: AdminSidebarProps) {

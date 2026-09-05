@@ -8,7 +8,7 @@
  * - Admin → NEVER cache
  */
 
-const CACHE_NAME = "mobileshop-v2";
+const CACHE_NAME = "mobileshop-v4";
 const STATIC_ASSETS = [
   "/",
   "/offline.html",
@@ -116,4 +116,50 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
+});
+
+self.addEventListener("push", (event) => {
+  let title = "New stock";
+  let body = "Fresh listings are live.";
+  let url = "/phones";
+  try {
+    const data = event.data ? event.data.json() : {};
+    if (typeof data.title === "string") title = data.title;
+    if (typeof data.body === "string") body = data.body;
+    if (typeof data.url === "string") url = data.url;
+  } catch {
+    if (event.data) body = event.data.text();
+  }
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/icons/icon-192.svg",
+      data: { url },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = new URL(event.notification.data?.url || "/phones", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clients) => {
+      for (const client of clients) {
+        if (client.url === targetUrl && "focus" in client) {
+          return client.focus();
+        }
+      }
+      for (const client of clients) {
+        if (client.url.startsWith(self.location.origin) && "navigate" in client) {
+          try {
+            await client.navigate(targetUrl);
+            return client.focus();
+          } catch {
+            break;
+          }
+        }
+      }
+      return self.clients.openWindow(targetUrl);
+    })
+  );
 });

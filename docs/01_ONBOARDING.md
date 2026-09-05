@@ -32,6 +32,7 @@ If you create anything on their behalf: document ownership, hand over credential
 - Shop Settings → **Send yourself a WhatsApp test**
 - Confirm Call, Maps, hours, SSL
 - Print counter QR from Admin → More → Shop QR
+- Admin → More → Stock alerts: optional extra ping (50 shop alerts / day; new listings are separate)
 - Add to Home screen on the owner’s Android
 - Submit sitemap in Search Console: `https://YOUR-DOMAIN/sitemap.xml`
 

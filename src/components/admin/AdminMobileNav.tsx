@@ -13,6 +13,7 @@ import {
   BarChart3,
   FileText,
   QrCode,
+  Bell,
   MoreHorizontal,
   LogOut,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const PRIMARY_ITEMS = [
 const MORE_ITEMS = [
   { href: "/admin/content", label: "Content", hint: "Announcements & testimonials", icon: FileText },
   { href: "/admin/qr", label: "Shop QR", hint: "Print counter code", icon: QrCode },
+  { href: "/admin/notify", label: "Stock alerts", hint: "50 shop alerts / day · listings separate", icon: Bell },
 ] as const;
 
 function pathMatches(pathname: string, href: string): boolean {
