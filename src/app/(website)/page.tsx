@@ -7,6 +7,7 @@ import { listPublicTestimonials } from "@/server/modules/content";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { StoreMap } from "@/components/public/StoreMap";
 import { Tilt3D } from "@/components/public/Tilt3D";
+import { AutocompleteSearch } from "@/components/shared/AutocompleteSearch";
 import { resolvePublicAppUrl } from "@/lib/qr";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -146,23 +147,10 @@ export default async function HomePage() {
                 </p>
               </FadeIn>
 
-              <FadeIn delay={240}>
-                <form action="/phones" className="mx-auto mt-8 w-full max-w-lg lg:mx-0">
-                  <div className="flex items-center gap-1 rounded-full border border-border bg-white p-1.5 shadow-[0_10px_34px_-18px_rgba(0,0,0,0.35)]">
-                    <svg className="ml-3 h-5 w-5 shrink-0 text-ink-faint" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      name="q"
-                      placeholder="iPhone 13, Samsung…"
-                      className="h-12 w-full min-w-0 bg-transparent px-3 text-base font-medium text-ink placeholder:text-ink-faint focus:outline-none"
-                    />
-                    <button type="submit" className="btn-dark shrink-0 !min-h-0 !px-5 py-3 text-sm">
-                      Search
-                    </button>
-                  </div>
-                </form>
+              <FadeIn delay={240} className="relative z-30">
+                <div className="mx-auto mt-8 w-full max-w-lg lg:mx-0">
+                  <AutocompleteSearch placeholder="Search iPhone 13, Pixel, Samsung…" large />
+                </div>
               </FadeIn>
 
               <FadeIn delay={320}>

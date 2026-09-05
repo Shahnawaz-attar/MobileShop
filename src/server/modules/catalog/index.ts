@@ -961,6 +961,75 @@ export async function listModels() {
   return models;
 }
 
+/**
+ * Autocomplete suggestions for the public search box.
+ * Returns live products (AVAILABLE/RESERVED) + matching brands + models.
+ * Lightweight: capped results, only the fields the dropdown needs.
+ */
+export async function searchSuggestions(q: string) {
+  const query = q.trim().toLowerCase();
+  if (query.length < 1) {
+    return { products: [], brands: [], models: [] };
+  }
+
+  const [products, brands, models] = await Promise.all([
+    db.product.findMany({
+      where: {
+        availability: { in: ["AVAILABLE", "RESERVED"] },
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { brand: { name: { contains: query, mode: "insensitive" } } },
+          { model: { name: { contains: query, mode: "insensitive" } } },
+        ],
+      },
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+      take: 6,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        deviceType: true,
+        storageGb: true,
+        pricePaise: true,
+        brand: { select: { name: true } },
+        media: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
+      },
+    }),
+    db.brand.findMany({
+      where: { name: { contains: query, mode: "insensitive" } },
+      orderBy: { sortOrder: "asc" },
+      take: 3,
+      select: { id: true, name: true, slug: true },
+    }),
+    db.phoneModel.findMany({
+      where: { name: { contains: query, mode: "insensitive" } },
+      orderBy: { name: "asc" },
+      take: 3,
+      select: { id: true, name: true, slug: true, brand: { select: { name: true } } },
+    }),
+  ]);
+
+  return {
+    products: products.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      deviceType: p.deviceType,
+      storageGb: p.storageGb,
+      pricePaise: p.pricePaise,
+      brandName: p.brand.name,
+      imageUrl: p.media[0]?.url ?? null,
+    })),
+    brands: brands.map((b) => ({ id: b.id, name: b.name, slug: b.slug })),
+    models: models.map((m) => ({
+      id: m.id,
+      name: m.name,
+      slug: m.slug,
+      brandName: m.brand.name,
+    })),
+  };
+}
+
 const createBrandSchema = z.object({
   name: z.string().trim().min(1, "Brand name is required").max(60, "Brand name is too long"),
 });

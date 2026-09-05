@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Suspense, useState, useEffect } from "react";
-import { SearchInput } from "@/components/shared/SearchInput";
+import { AutocompleteSearch } from "@/components/shared/AutocompleteSearch";
 import { Menu, X } from "lucide-react";
 
 interface PublicNavbarProps {
@@ -64,9 +64,9 @@ export function PublicNavbar({ shopName, logoUrl }: PublicNavbarProps) {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden w-56 lg:block xl:w-64">
+            <div className="hidden w-64 lg:block xl:w-72">
               <Suspense fallback={<div className="h-10 animate-pulse rounded-full bg-surface-hover" />}>
-                <SearchInput placeholder="Search devices…" />
+                <AutocompleteSearch placeholder="Search devices…" compact />
               </Suspense>
             </div>
 
@@ -118,9 +118,8 @@ export function PublicNavbar({ shopName, logoUrl }: PublicNavbarProps) {
 
             <div className="mb-5">
               <Suspense fallback={<div className="h-12 animate-pulse rounded-2xl bg-surface-hover" />}>
-                <SearchInput
+                <AutocompleteSearch
                   placeholder="Search devices…"
-                  submitOnAction
                   onNavigate={() => setIsMenuOpen(false)}
                 />
               </Suspense>
