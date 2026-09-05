@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { listBrands, listModels } from "@/server/modules/catalog";
+import { getShop } from "@/server/modules/shop";
+import { resolvePublicAppUrl } from "@/lib/qr";
 import { ProductForm } from "@/components/admin/ProductForm";
 
 export const metadata: Metadata = {
@@ -7,7 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function NewProductPage() {
-  const [brands, models] = await Promise.all([listBrands(), listModels()]);
+  const [brands, models, shop] = await Promise.all([listBrands(), listModels(), getShop()]);
+  const publicAppUrl = resolvePublicAppUrl();
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -20,7 +23,13 @@ export default async function NewProductPage() {
         </p>
       </div>
 
-      <ProductForm brands={brands} models={models} product={null} />
+      <ProductForm
+        brands={brands}
+        models={models}
+        product={null}
+        shopName={shop.name}
+        publicAppUrl={publicAppUrl}
+      />
     </div>
   );
 }

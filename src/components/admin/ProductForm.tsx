@@ -13,6 +13,7 @@ import {
 } from "@/lib/constants";
 import { ProductMediaUpload } from "@/components/admin/ProductMediaUpload";
 import { BrandModelPicker } from "@/components/admin/BrandModelPicker";
+import { ProductPublishSuccess } from "@/components/admin/ProductPublishSuccess";
 import type {
   BrandOption,
   ModelOption,
@@ -29,6 +30,8 @@ interface ProductFormProps {
   brands: BrandOption[];
   models: ModelOption[];
   product?: AdminProductDetail | null;
+  shopName: string;
+  publicAppUrl: string;
 }
 
 const STORAGE_OPTIONS = [32, 64, 128, 256, 512, 1024] as const;
@@ -45,10 +48,18 @@ const inputClass =
 const labelClass = "block text-sm font-semibold text-foreground mb-1.5";
 const sectionClass = "rounded-2xl border border-border/50 bg-card p-5 sm:p-7 shadow-sm transition-shadow hover:shadow-md";
 
-export function ProductForm({ brands, models, product }: ProductFormProps) {
+export function ProductForm({ brands, models, product, shopName, publicAppUrl }: ProductFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [publishSuccess, setPublishSuccess] = useState<{
+    slug: string;
+    title: string;
+    pricePaise: number;
+    storageGb: number | null;
+    colour: string | null;
+    condition: Condition;
+  } | null>(null);
 
   // Form state
   const [brandList, setBrandList] = useState(brands);
@@ -136,11 +147,18 @@ export function ProductForm({ brands, models, product }: ProductFormProps) {
 
       if (result.success) {
         if (!product) {
-          // If it was a new product, redirect to edit page to upload photos
           router.push(`/admin/products/${result.data.id}/edit`);
           router.refresh();
+        } else if (availability === "AVAILABLE") {
+          setPublishSuccess({
+            slug: result.data.slug,
+            title: result.data.title,
+            pricePaise,
+            storageGb,
+            colour: colour.trim() || null,
+            condition,
+          });
         } else {
-          // If updating, go back to list
           router.push("/admin/products");
           router.refresh();
         }
@@ -152,6 +170,14 @@ export function ProductForm({ brands, models, product }: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {publishSuccess && (
+        <ProductPublishSuccess
+          {...publishSuccess}
+          shopName={shopName}
+          publicAppUrl={publicAppUrl}
+          onDismiss={() => setPublishSuccess(null)}
+        />
+      )}
       {error && (
         <div
           role="alert"

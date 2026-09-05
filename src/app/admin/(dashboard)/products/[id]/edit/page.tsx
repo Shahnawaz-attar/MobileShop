@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { listBrands, listModels, getAdminProduct } from "@/server/modules/catalog";
+import { getShop } from "@/server/modules/shop";
+import { resolvePublicAppUrl } from "@/lib/qr";
 import { ProductForm } from "@/components/admin/ProductForm";
 
 export const metadata: Metadata = {
@@ -13,10 +15,11 @@ interface EditProductPageProps {
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const { id } = await params;
-  const [brands, models, product] = await Promise.all([
+  const [brands, models, product, shop] = await Promise.all([
     listBrands(),
     listModels(),
     getAdminProduct(id),
+    getShop(),
   ]);
 
   if (!product) {
@@ -34,7 +37,13 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         </p>
       </div>
 
-      <ProductForm brands={brands} models={models} product={product} />
+      <ProductForm
+        brands={brands}
+        models={models}
+        product={product}
+        shopName={shop.name}
+        publicAppUrl={resolvePublicAppUrl()}
+      />
     </div>
   );
 }

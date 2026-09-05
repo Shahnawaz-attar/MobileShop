@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 import { getPublicProduct } from "@/server/modules/catalog";
 import { getShop } from "@/server/modules/shop";
 import { formatINR } from "@/lib/money";
-import { CONDITION_LABELS } from "@/lib/constants";
-import { buildWhatsAppLink, generateProductEnquiryText } from "@/lib/whatsapp";
+import { CONDITION_LABELS, CONDITION_DESCRIPTIONS } from "@/lib/constants";
+import { buildWhatsAppLink, generateProductEnquiryText, generateProductShareText, buildWhatsAppShareLink } from "@/lib/whatsapp";
 import { resolvePublicAppUrl } from "@/lib/qr";
 import { ProductGallery } from "./ProductGallery";
-import { WhatsAppCTA } from "./WhatsAppCTA";
+import { ProductShareBar } from "@/components/public/ProductShareBar";
 import { ProductViewTracker } from "./ProductViewTracker";
+import { FadeIn } from "@/components/shared/FadeIn";
 
 interface PageProps {
   params: Promise<{ productSlug: string }>;
@@ -67,12 +68,27 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const productUrl = `${resolvePublicAppUrl()}/phones/${product.slug}`;
   const waText = generateProductEnquiryText(product, productUrl);
   const whatsappUrl = buildWhatsAppLink(shop.whatsapp, waText);
+  const shareText = generateProductShareText(
+    {
+      title: product.title,
+      storageGb: product.storageGb,
+      colour: product.colour,
+      pricePaise: product.pricePaise,
+      condition: CONDITION_LABELS[product.condition],
+    },
+    productUrl,
+    shop.name
+  );
+  const shareWhatsappUrl = buildWhatsAppShareLink(shareText);
 
   const discount = product.mrpPaise && product.mrpPaise > product.pricePaise
     ? Math.round(((product.mrpPaise - product.pricePaise) / product.mrpPaise) * 100)
     : 0;
 
   const primaryMedia = product.media.find(m => m.kind === "FRONT") || product.media[0];
+  const variantStr = [product.storageGb ? `${product.storageGb}GB` : null, product.colour].filter(Boolean).join(" ");
+  const fullName = variantStr ? `${product.title} (${variantStr})` : product.title;
+  const statusImageUrl = `/api/og/product?title=${encodeURIComponent(fullName)}&price=${product.pricePaise / 100}${primaryMedia ? `&image=${encodeURIComponent(primaryMedia.url)}` : ""}`;
   
   // JSON-LD Structured Data for Product
   const jsonLd = {
@@ -109,19 +125,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {/* Client-side tracking component (avoids cache issues) */}
       <ProductViewTracker productId={product.id} />
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 bg-[#fafafa] min-h-screen">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 bg-[#f5f5f7] min-h-screen">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
           
-          {/* Left Column: Media */}
-          <div className="lg:sticky lg:top-8 lg:h-max">
+          <FadeIn direction="up" className="lg:sticky lg:top-8 lg:h-max">
             <ProductGallery media={product.media} />
-          </div>
+          </FadeIn>
 
-          {/* Right Column: Details */}
-          <div className="flex flex-col">
+          <FadeIn direction="up" delay={100} className="flex flex-col">
             {/* Badges */}
             <div className="mb-6 flex flex-wrap gap-3">
-              <span className="inline-flex items-center rounded-full bg-slate-100/80 px-4 py-1.5 text-xs font-bold text-slate-700 backdrop-blur-md shadow-sm border border-slate-200/50">
+              <span className="inline-flex items-center rounded-full bg-white px-4 py-1.5 text-xs font-bold text-slate-700 shadow-sm border border-slate-200/50">
                 {CONDITION_LABELS[product.condition]}
               </span>
               {product.availability === "RESERVED" && (
@@ -135,6 +149,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 </span>
               )}
             </div>
+            <p className="-mt-4 mb-6 text-sm font-medium text-slate-500 leading-relaxed">
+              {CONDITION_DESCRIPTIONS[product.condition]}
+            </p>
 
             <h1 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-6xl leading-[1.1] mb-4">
               {product.title}
@@ -240,15 +257,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <p className="mt-1 text-sm text-slate-500">{shop.addressLine1}, {shop.city}</p>
             </div>
 
-          </div>
+          </FadeIn>
         </div>
       </main>
 
-      {/* Sticky Bottom Action Bar (Mobile + Desktop) */}
       {product.availability === "AVAILABLE" && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/80 p-4 backdrop-blur-xl sm:px-6 lg:static lg:mt-10 lg:border-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/80 bg-white/90 p-4 backdrop-blur-xl sm:px-6 lg:static lg:mt-10 lg:border-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           <div className="mx-auto max-w-5xl">
-            <WhatsAppCTA productId={product.id} whatsappUrl={whatsappUrl} />
+            <ProductShareBar
+              productId={product.id}
+              productUrl={productUrl}
+              whatsappUrl={whatsappUrl}
+              shareWhatsappUrl={shareWhatsappUrl}
+              statusImageUrl={statusImageUrl}
+            />
           </div>
         </div>
       )}

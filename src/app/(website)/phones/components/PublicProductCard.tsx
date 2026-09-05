@@ -30,10 +30,15 @@ export function PublicProductCard({ product, priority = false }: PublicProductCa
       : 0;
 
   return (
-    <Link href={`/phones/${product.slug}`} className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-slate-200/50 bg-white transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] hover:border-slate-300/50">
+    <Link href={`/phones/${product.slug}`} className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-slate-200/50 bg-white transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.12)] hover:border-slate-300/80 ring-1 ring-transparent hover:ring-slate-900/5">
       
       {/* Image Container (Studio Backdrop) */}
       <div className="relative flex aspect-[4/5] sm:aspect-square w-full items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-100 via-slate-50 to-white p-6 sm:p-8">
+        <div className="pointer-events-none absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 pb-6">
+          <span className="rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-900 shadow-lg">
+            View details →
+          </span>
+        </div>
         {product.primaryImageUrl ? (
           <div className="relative h-full w-full">
             <Image

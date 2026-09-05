@@ -7,6 +7,7 @@ import { CatalogueFilters } from "./components/CatalogueFilters";
 import { LoadMoreCatalogue } from "./components/LoadMoreCatalogue";
 import { SortSelect } from "./components/SortSelect";
 import { SearchInput } from "@/components/shared/SearchInput";
+import { FadeIn } from "@/components/shared/FadeIn";
 import { MobileFiltersDrawer } from "./components/MobileFiltersDrawer";
 import { ActiveFilters } from "./components/ActiveFilters";
 
@@ -59,14 +60,18 @@ export default async function PhonesPage({
   return (
     <>
       {/* Header Area */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <h1 className="typography-h2 sm:typography-h1">
-            Browse Devices
-          </h1>
-          <p className="typography-body mt-2">
-            {productsData.total} {productsData.total === 1 ? 'device' : 'devices'} available
-          </p>
+      <div className="relative overflow-hidden border-b border-slate-200 bg-[#f5f5f7]">
+        <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(#e5e7eb 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+        <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-gradient-to-bl from-blue-100 to-purple-50 blur-3xl opacity-60" />
+        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 sm:py-12">
+          <FadeIn direction="up">
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900">
+              Browse at {productsData.total > 0 ? "live" : "our"} stock
+            </h1>
+            <p className="mt-3 text-lg font-medium text-slate-500">
+              {productsData.total} {productsData.total === 1 ? "device" : "devices"} ready to inspect — tap any card for full photos & honest condition.
+            </p>
+          </FadeIn>
 
           {/* Mobile Search & Sort (Desktop uses sidebar for filters, but top for search/sort) */}
           <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -96,7 +101,7 @@ export default async function PhonesPage({
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-[#fbfbfd] min-h-screen">
         <div className="flex flex-col lg:flex-row gap-10">
           
           {/* Desktop Filters Sidebar */}
@@ -134,7 +139,9 @@ export default async function PhonesPage({
             ) : (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {productsData.products.map((product, i) => (
-                  <PublicProductCard key={product.id} product={product} priority={i < 4} />
+                  <FadeIn key={product.id} delay={i * 80}>
+                    <PublicProductCard product={product} priority={i < 4} />
+                  </FadeIn>
                 ))}
                 
                 {/* Client component for pagination */}

@@ -101,9 +101,9 @@ export default async function HomePage() {
           
           <FadeIn delay={100} direction="up">
             <h1 className="text-5xl sm:text-7xl font-black tracking-tight text-slate-900 mb-6 max-w-5xl leading-[1.1]">
-              Premium pre-owned. <br className="hidden sm:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-400 to-slate-600">
-                Without the premium price.
+              {shop.name}. <br className="hidden sm:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-500 to-slate-800">
+                Premium pre-owned, honest prices.
               </span>
             </h1>
           </FadeIn>
