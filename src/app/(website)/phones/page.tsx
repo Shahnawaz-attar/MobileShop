@@ -47,6 +47,11 @@ export default async function PhonesPage({
       : typeof params.conditions === "string" 
         ? (params.conditions.split(",") as Condition[]).filter(Boolean) 
         : undefined,
+    storage: Array.isArray(params.storage)
+      ? params.storage.flatMap(s => s.split(",")).map(Number).filter((n) => Number.isInteger(n) && n > 0)
+      : typeof params.storage === "string"
+        ? params.storage.split(",").map(Number).filter((n) => Number.isInteger(n) && n > 0)
+        : undefined,
     minPrice: typeof params.minPrice === "string" ? Number(params.minPrice) : undefined,
     maxPrice: typeof params.maxPrice === "string" ? Number(params.maxPrice) : undefined,
     sort: typeof params.sort === "string" && ["NEWEST", "PRICE_ASC", "PRICE_DESC"].includes(params.sort) 
@@ -118,7 +123,7 @@ export default async function PhonesPage({
               <div className="device-card p-6">
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-base font-black text-ink">Filters</h2>
-                  {(filters.brands || filters.conditions || filters.minPrice || filters.maxPrice) && (
+                  {(filters.brands || filters.conditions || filters.storage || filters.minPrice || filters.maxPrice) && (
                     <Link href="/phones" className="text-xs font-semibold text-brand hover:underline">
                       Clear all
                     </Link>

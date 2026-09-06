@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { CONDITION_LABELS } from "@/lib/constants";
+import { formatStorageGb } from "@/lib/catalogue-filters";
 import type { Condition } from "@/types";
 import { X } from "lucide-react";
 
@@ -16,10 +17,17 @@ export function ActiveFilters({ brands }: ActiveFiltersProps) {
 
   const activeBrands = searchParams.get("brands")?.split(",").filter(Boolean) || [];
   const activeConditions = (searchParams.get("conditions")?.split(",").filter(Boolean) || []) as Condition[];
+  const activeStorage = (searchParams.get("storage")?.split(",").filter(Boolean) || []).map(Number);
   const minPrice = searchParams.get("minPrice");
   const maxPrice = searchParams.get("maxPrice");
 
-  if (activeBrands.length === 0 && activeConditions.length === 0 && !minPrice && !maxPrice) {
+  if (
+    activeBrands.length === 0 &&
+    activeConditions.length === 0 &&
+    activeStorage.length === 0 &&
+    !minPrice &&
+    !maxPrice
+  ) {
     return null;
   }
 
@@ -81,6 +89,15 @@ export function ActiveFilters({ brands }: ActiveFiltersProps) {
         <span key={`cond-${cond}`} className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white">
           {CONDITION_LABELS[cond] || cond}
           <button onClick={() => removeFilter("conditions", cond)} className="rounded-full transition-colors hover:bg-white/20">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </span>
+      ))}
+
+      {activeStorage.map(gb => (
+        <span key={`storage-${gb}`} className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-semibold text-white">
+          {formatStorageGb(gb)}
+          <button onClick={() => removeFilter("storage", String(gb))} className="rounded-full transition-colors hover:bg-white/20">
             <X className="h-3.5 w-3.5" />
           </button>
         </span>

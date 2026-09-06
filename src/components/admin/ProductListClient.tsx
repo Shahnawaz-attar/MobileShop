@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import { setAvailabilityAction, deleteProductAction, loadMoreAdminProductsAction } from "@/server/modules/catalog/actions";
-import type { Availability } from "@/types";
+import type { Availability, Condition } from "@/types";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Button, buttonVariants } from "@/components/ui/button";
 
@@ -32,6 +32,11 @@ interface ProductListClientProps {
   initialNextCursor?: string | null;
   tab?: string;
   q?: string;
+  brands?: string[];
+  conditions?: Condition[];
+  storage?: number[];
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 /** Availability status chip colour mapping */
@@ -47,7 +52,17 @@ interface Toast {
   message: string;
 }
 
-export function ProductListClient({ initialProducts, initialNextCursor, tab, q }: ProductListClientProps) {
+export function ProductListClient({
+  initialProducts,
+  initialNextCursor,
+  tab,
+  q,
+  brands,
+  conditions,
+  storage,
+  minPrice,
+  maxPrice,
+}: ProductListClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -60,10 +75,16 @@ export function ProductListClient({ initialProducts, initialNextCursor, tab, q }
   // Sync state when tab or query changes
   const prevTabRef = useRef(tab);
   const prevQRef = useRef(q);
+  const prevFiltersRef = useRef({ brands, conditions, storage, minPrice, maxPrice });
 
-  if (prevTabRef.current !== tab || prevQRef.current !== q) {
+  if (
+    prevTabRef.current !== tab ||
+    prevQRef.current !== q ||
+    JSON.stringify(prevFiltersRef.current) !== JSON.stringify({ brands, conditions, storage, minPrice, maxPrice })
+  ) {
     prevTabRef.current = tab;
     prevQRef.current = q;
+    prevFiltersRef.current = { brands, conditions, storage, minPrice, maxPrice };
     setProducts(initialProducts);
     setNextCursor(initialNextCursor);
   }
@@ -73,7 +94,10 @@ export function ProductListClient({ initialProducts, initialNextCursor, tab, q }
     setIsLoadingMore(true);
     try {
       const availability = tab === "ALL" ? undefined : (tab as Availability);
-      const res = await loadMoreAdminProductsAction(availability, q, nextCursor);
+      const res = await loadMoreAdminProductsAction(
+        { availability, q, brands, conditions, storage, minPrice, maxPrice },
+        nextCursor
+      );
       setProducts((prev) => [...prev, ...res.products]);
       setNextCursor(res.nextCursor);
     } catch {

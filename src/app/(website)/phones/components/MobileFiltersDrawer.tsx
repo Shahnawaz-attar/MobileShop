@@ -16,10 +16,12 @@ export function MobileFiltersDrawer({ brands }: MobileFiltersDrawerProps) {
   // Count active filters to show a badge
   const activeBrands = searchParams.get("brands")?.split(",").filter(Boolean).length || 0;
   const activeConditions = searchParams.get("conditions")?.split(",").filter(Boolean).length || 0;
+  const activeStorage = searchParams.get("storage")?.split(",").filter(Boolean).length || 0;
   const hasMinPrice = searchParams.has("minPrice") ? 1 : 0;
   const hasMaxPrice = searchParams.has("maxPrice") ? 1 : 0;
-  
-  const activeFilterCount = activeBrands + activeConditions + hasMinPrice + hasMaxPrice;
+
+  const activeFilterCount =
+    activeBrands + activeConditions + activeStorage + hasMinPrice + hasMaxPrice;
 
   useEffect(() => {
     if (isOpen) {

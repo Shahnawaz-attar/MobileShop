@@ -13,6 +13,7 @@ import {
   createModel,
   type ProductInput,
   type PublicFilters,
+  type AdminFilters,
 } from "@/server/modules/catalog";
 import { formatINR } from "@/lib/money";
 import { AVAILABILITY_LABELS, CONDITION_LABELS, DEVICE_TYPE_LABELS } from "@/lib/constants";
@@ -27,14 +28,12 @@ import type { ActionResult, Availability, BrandOption, DeviceType, ModelOption }
  */
 
 export async function loadMoreAdminProductsAction(
-  availability: Availability | undefined,
-  q: string | undefined,
+  filters: Omit<AdminFilters, "cursor" | "limit">,
   cursor: string | undefined
 ) {
   await requireOwner();
   const { products, nextCursor } = await listAdminProducts({
-    availability,
-    q,
+    ...filters,
     cursor,
     limit: 20,
   });

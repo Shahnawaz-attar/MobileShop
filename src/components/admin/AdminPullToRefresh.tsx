@@ -85,8 +85,18 @@ export function AdminPullToRefresh({ children }: AdminPullToRefreshProps) {
         </div>
       </div>
 
-      {/* Content nudged down while pulling */}
-      <div style={{ transform: `translateY(${pull}px)`, transition: refreshing ? "transform 0.2s ease" : "none" }}>
+      {/* Content nudged down while pulling.
+          IMPORTANT: only apply a transform while actually pulling. A persistent
+          `transform: translateY(0px)` creates a containing block that breaks
+          `position: fixed` descendants (bottom sheets / modals) — they would
+          anchor to this wrapper instead of the viewport. */}
+      <div
+        style={
+          pull > 0 || refreshing
+            ? { transform: `translateY(${pull}px)`, transition: refreshing ? "transform 0.2s ease" : "none" }
+            : undefined
+        }
+      >
         {children}
       </div>
     </div>

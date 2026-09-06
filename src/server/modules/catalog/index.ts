@@ -73,6 +73,11 @@ export type ProductInput = z.infer<typeof productInputSchema>;
 const adminFiltersSchema = z.object({
   availability: availabilityEnum.optional(),
   q: z.string().trim().max(120).optional(),
+  brands: z.array(z.string()).optional(),
+  conditions: z.array(conditionEnum).optional(),
+  storage: z.array(z.number().int().positive()).optional(),
+  minPrice: z.number().int().min(0).optional(),
+  maxPrice: z.number().int().min(0).optional(),
   cursor: z.string().cuid().optional(),
   limit: z.number().int().min(1).max(100).default(24),
 });
@@ -85,6 +90,7 @@ const publicFiltersSchema = z.object({
   q: z.string().trim().max(120).optional(),
   brands: z.array(z.string()).optional(),
   conditions: z.array(conditionEnum).optional(),
+  storage: z.array(z.number().int().positive()).optional(),
   minPrice: z.number().int().min(0).optional(),
   maxPrice: z.number().int().min(0).optional(),
   isFeatured: z.boolean().optional(),
@@ -168,6 +174,24 @@ export async function listAdminProducts(filters: AdminFilters = {}) {
       { conditionNotes: { contains: q, mode: "insensitive" } },
       { internalNotes: { contains: q, mode: "insensitive" } },
     ];
+  }
+
+  if (parsed.brands && parsed.brands.length > 0) {
+    where.brand = { slug: { in: parsed.brands } };
+  }
+
+  if (parsed.conditions && parsed.conditions.length > 0) {
+    where.condition = { in: parsed.conditions };
+  }
+
+  if (parsed.storage && parsed.storage.length > 0) {
+    where.storageGb = { in: parsed.storage };
+  }
+
+  if (parsed.minPrice !== undefined || parsed.maxPrice !== undefined) {
+    where.pricePaise = {};
+    if (parsed.minPrice !== undefined) where.pricePaise.gte = parsed.minPrice;
+    if (parsed.maxPrice !== undefined) where.pricePaise.lte = parsed.maxPrice;
   }
 
   const [products, total] = await Promise.all([
@@ -273,6 +297,10 @@ export async function listPublicProducts(filters: PublicFilters = {}) {
 
   if (parsed.conditions && parsed.conditions.length > 0) {
     where.condition = { in: parsed.conditions };
+  }
+
+  if (parsed.storage && parsed.storage.length > 0) {
+    where.storageGb = { in: parsed.storage };
   }
 
   if (parsed.isFeatured !== undefined) {

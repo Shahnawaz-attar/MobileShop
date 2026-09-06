@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listAdminProducts } from "@/server/modules/catalog";
+import { listAdminProducts, listBrands } from "@/server/modules/catalog";
 import { formatINR } from "@/lib/money";
 import { AVAILABILITY_LABELS, CONDITION_LABELS, DEVICE_TYPE_LABELS } from "@/lib/constants";
 import { ProductListClient } from "@/components/admin/ProductListClient";
-import type { Availability } from "@/types";
+import { AdminProductFilters } from "@/components/admin/AdminProductFilters";
+import type { Availability, Condition } from "@/types";
 
 export const metadata: Metadata = {
   title: "Products",
@@ -19,7 +20,16 @@ const TABS: { key: "ALL" | Availability; label: string }[] = [
 ];
 
 interface ProductsPageProps {
-  searchParams: Promise<{ tab?: string; q?: string; cursor?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    q?: string;
+    brands?: string;
+    conditions?: string;
+    storage?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    cursor?: string;
+  }>;
 }
 
 const PAGE_SIZE = 20;
@@ -29,17 +39,29 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   const tab = params.tab ?? "ALL";
   const q = params.q ?? "";
+  const brands = params.brands?.split(",").filter(Boolean) || undefined;
+  const conditions = params.conditions?.split(",").filter(Boolean) as Condition[] | undefined;
+  const storage = (params.storage?.split(",").map(Number).filter((n) => Number.isInteger(n) && n > 0)) || undefined;
+  const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
+  const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
   const cursor = params.cursor;
 
-  const availability =
-    tab === "ALL" ? undefined : (tab as Availability);
+  const availability = tab === "ALL" ? undefined : (tab as Availability);
 
-  const { products, total, nextCursor } = await listAdminProducts({
-    availability,
-    q: q || undefined,
-    cursor,
-    limit: PAGE_SIZE,
-  });
+  const [brandOptions, { products, total, nextCursor }] = await Promise.all([
+    listBrands(),
+    listAdminProducts({
+      availability,
+      q: q || undefined,
+      brands,
+      conditions,
+      storage,
+      minPrice,
+      maxPrice,
+      cursor,
+      limit: PAGE_SIZE,
+    }),
+  ]);
 
   return (
     <div>
@@ -85,8 +107,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         })}
       </div>
 
-      {/* List */}
+      {/* Search + filters */}
       <div className="mt-6">
+        <AdminProductFilters brands={brandOptions} />
+      </div>
+
+      {/* List */}
+      <div className="mt-4">
         <ProductListClient
           initialProducts={products.map((p) => ({
             ...p,
@@ -98,6 +125,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           initialNextCursor={nextCursor}
           tab={tab}
           q={q}
+          brands={brands}
+          conditions={conditions}
+          storage={storage}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
         />
       </div>
 
