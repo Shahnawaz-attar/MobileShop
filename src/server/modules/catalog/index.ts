@@ -6,6 +6,7 @@ import { resolveBillViewUrl, isPdfBillUrl } from "@/lib/image";
 import { buildProductSlug, slugify } from "@/lib/slug";
 import { deleteProductMedia } from "@/server/modules/media";
 import { fuzzyMatchProducts, fuzzyMatchBrands, fuzzyMatchModels } from "./fuzzy";
+import { getActiveDiscounts, resolveDiscountForProduct, applyDiscountPercent } from "@/server/modules/discounts";
 import type { Availability, Condition, DeviceType } from "@/types";
 import { z } from "zod";
 
@@ -96,6 +97,8 @@ const publicFiltersSchema = z.object({
   minPrice: z.number().int().min(0).optional(),
   maxPrice: z.number().int().min(0).optional(),
   isFeatured: z.boolean().optional(),
+  /** Only show products that currently have an active campaign discount. */
+  onSale: z.boolean().optional(),
   sort: publicSortEnum.default("NEWEST"),
   cursor: z.string().cuid().optional(),
   limit: z.number().int().min(1).max(100).default(24),
@@ -337,6 +340,27 @@ export async function listPublicProducts(filters: PublicFilters = {}) {
     where.isFeatured = parsed.isFeatured;
   }
 
+  // "On sale" — only products that currently carry an active campaign discount.
+  if (parsed.onSale) {
+    const active = await getActiveDiscounts();
+    const saleBrandIds = new Set<string>();
+    const saleProductIds = new Set<string>();
+    for (const d of active) {
+      d.brandIds.forEach((b) => saleBrandIds.add(b));
+      d.productIds.forEach((p) => saleProductIds.add(p));
+    }
+    const orParts: { brandId?: { in: string[] }; id?: { in: string[] } }[] = [];
+    if (saleBrandIds.size > 0) orParts.push({ brandId: { in: [...saleBrandIds] } });
+    if (saleProductIds.size > 0) orParts.push({ id: { in: [...saleProductIds] } });
+
+    if (orParts.length > 0) {
+      where.AND = [...(where.AND ?? []), { OR: orParts }];
+    } else {
+      // No active discounts at all — force empty result.
+      where.id = { in: [] };
+    }
+  }
+
   if (parsed.minPrice !== undefined || parsed.maxPrice !== undefined) {
     where.pricePaise = {};
     if (parsed.minPrice !== undefined) where.pricePaise.gte = parsed.minPrice;
@@ -373,6 +397,7 @@ export async function listPublicProducts(filters: PublicFilters = {}) {
         isFeatured: true,
         publishedAt: true,
         viewCount: true,
+        brandId: true,
         brand: { select: { name: true } },
         media: {
           orderBy: { sortOrder: "asc" },
@@ -387,25 +412,39 @@ export async function listPublicProducts(filters: PublicFilters = {}) {
   const hasNextPage = products.length > parsed.limit;
   const page = hasNextPage ? products.slice(0, parsed.limit) : products;
 
+  // Load active campaigns once and attach the applicable sale price to each card.
+  const activeDiscounts = await getActiveDiscounts();
+
   return {
-    products: page.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title,
-      deviceType: p.deviceType,
-      storageGb: p.storageGb,
-      colour: p.colour,
-      pricePaise: p.pricePaise,
-      mrpPaise: p.mrpPaise,
-      condition: p.condition,
-      availability: p.availability,
-      isFeatured: p.isFeatured,
-      publishedAt: p.publishedAt,
-      viewCount: p.viewCount,
-      brandName: p.brand.name,
-      primaryImageUrl: p.media[0]?.url ?? null,
-      primaryImageAlt: p.media[0]?.alt ?? null,
-    })),
+    products: page.map((p) => {
+      const discount = resolveDiscountForProduct(p, activeDiscounts);
+      return {
+        id: p.id,
+        slug: p.slug,
+        title: p.title,
+        deviceType: p.deviceType,
+        storageGb: p.storageGb,
+        colour: p.colour,
+        pricePaise: p.pricePaise,
+        mrpPaise: p.mrpPaise,
+        condition: p.condition,
+        availability: p.availability,
+        isFeatured: p.isFeatured,
+        publishedAt: p.publishedAt,
+        viewCount: p.viewCount,
+        brandName: p.brand.name,
+        primaryImageUrl: p.media[0]?.url ?? null,
+        primaryImageAlt: p.media[0]?.alt ?? null,
+        discount: discount
+          ? {
+              label: discount.label,
+              percent: discount.percent,
+              originalPricePaise: p.pricePaise,
+              salePricePaise: applyDiscountPercent(p.pricePaise, discount.percent),
+            }
+          : null,
+      };
+    }),
     nextCursor: hasNextPage ? page[page.length - 1]?.id ?? null : null,
     total,
   };
@@ -577,6 +616,7 @@ export async function getPublicProduct(slug: string) {
       colour: true,
       pricePaise: true,
       mrpPaise: true,
+      brandId: true,
       condition: true,
       conditionNotes: true,
       batteryType: true,
@@ -633,9 +673,21 @@ export async function getPublicProduct(slug: string) {
   // Strip the internal Cloudinary public id — it must never reach the public payload.
   const { billPublicId: _billPublicId, ...publicProduct } = product;
 
+  // Resolve any active campaign discount for this product.
+  const activeDiscounts = await getActiveDiscounts();
+  const discount = resolveDiscountForProduct(publicProduct, activeDiscounts);
+
   return {
     ...publicProduct,
     whatsappClicksWeek,
+    discount: discount
+      ? {
+          label: discount.label,
+          percent: discount.percent,
+          originalPricePaise: publicProduct.pricePaise,
+          salePricePaise: applyDiscountPercent(publicProduct.pricePaise, discount.percent),
+        }
+      : null,
     purchasedAt: publicProduct.hasBill ? publicProduct.purchasedAt : null,
     billUrl:
       publicProduct.hasBill &&

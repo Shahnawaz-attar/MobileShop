@@ -8,6 +8,9 @@ import { X } from "lucide-react";
 
 interface ActiveFiltersProps {
   brands: { id: string; name: string; slug: string }[];
+  /** Whether a discount is live right now. Reserved for show/hide parity; the
+   *  active "On Sale" chip still renders while ?sale=1 so it can be removed. */
+  hasActiveDiscounts?: boolean;
 }
 
 export function ActiveFilters({ brands }: ActiveFiltersProps) {
@@ -20,13 +23,15 @@ export function ActiveFilters({ brands }: ActiveFiltersProps) {
   const activeStorage = (searchParams.get("storage")?.split(",").filter(Boolean) || []).map(Number);
   const minPrice = searchParams.get("minPrice");
   const maxPrice = searchParams.get("maxPrice");
+  const onSale = searchParams.get("sale") === "1";
 
   if (
     activeBrands.length === 0 &&
     activeConditions.length === 0 &&
     activeStorage.length === 0 &&
     !minPrice &&
-    !maxPrice
+    !maxPrice &&
+    !onSale
   ) {
     return null;
   }
@@ -112,6 +117,15 @@ export function ActiveFilters({ brands }: ActiveFiltersProps) {
               : `Under ₹${Number(maxPrice) / 100}`
           }
           <button onClick={removePriceFilter} className="rounded-full transition-colors hover:bg-white/20">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </span>
+      )}
+
+      {onSale && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-error px-3 py-1 text-xs font-semibold text-white">
+          On Sale
+          <button onClick={() => removeFilter("sale")} className="rounded-full transition-colors hover:bg-white/20">
             <X className="h-3.5 w-3.5" />
           </button>
         </span>

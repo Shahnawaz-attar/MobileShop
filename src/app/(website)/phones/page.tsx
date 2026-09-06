@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { listPublicProducts, listBrands, type PublicFilters } from "@/server/modules/catalog";
+import { getActiveDiscounts } from "@/server/modules/discounts";
 import type { Condition } from "@/types";
 import { PublicProductCard } from "./components/PublicProductCard";
 import { CatalogueFilters } from "./components/CatalogueFilters";
@@ -10,6 +11,7 @@ import { SearchInput } from "@/components/shared/SearchInput";
 import { FadeIn } from "@/components/shared/FadeIn";
 import { MobileFiltersDrawer } from "./components/MobileFiltersDrawer";
 import { ActiveFilters } from "./components/ActiveFilters";
+import { SaleFilterToggle } from "./components/SaleFilterToggle";
 import { BrandInterestForm } from "@/components/public/BrandInterestForm";
 import { Breadcrumbs } from "@/components/public/Breadcrumbs";
 
@@ -54,15 +56,18 @@ export default async function PhonesPage({
         : undefined,
     minPrice: typeof params.minPrice === "string" ? Number(params.minPrice) : undefined,
     maxPrice: typeof params.maxPrice === "string" ? Number(params.maxPrice) : undefined,
+    onSale: params.sale === "1" ? true : undefined,
     sort: typeof params.sort === "string" && ["NEWEST", "PRICE_ASC", "PRICE_DESC"].includes(params.sort) 
       ? (params.sort as "NEWEST" | "PRICE_ASC" | "PRICE_DESC") 
       : "NEWEST",
   };
 
-  const [productsData, brands] = await Promise.all([
+  const [productsData, brands, activeDiscounts] = await Promise.all([
     listPublicProducts(filters),
     listBrands(),
+    getActiveDiscounts(),
   ]);
+  const hasActiveDiscounts = activeDiscounts.length > 0;
 
   return (
     <>
@@ -95,8 +100,14 @@ export default async function PhonesPage({
             </div>
 
             <div className="shrink-0 flex flex-wrap items-center gap-2 sm:gap-4">
+              {hasActiveDiscounts && (
+                <Suspense fallback={<div className="h-10 w-24 animate-pulse rounded-full bg-surface-hover" />}>
+                  <SaleFilterToggle />
+                </Suspense>
+              )}
+
               <Suspense fallback={<div className="h-10 w-24 animate-pulse rounded-full bg-surface-hover" />}>
-                <MobileFiltersDrawer brands={brands} />
+                <MobileFiltersDrawer brands={brands} hasActiveDiscounts={hasActiveDiscounts} />
               </Suspense>
 
               <div className="flex items-center gap-2">
@@ -109,7 +120,7 @@ export default async function PhonesPage({
           </div>
 
           <Suspense fallback={null}>
-            <ActiveFilters brands={brands} />
+            <ActiveFilters brands={brands} hasActiveDiscounts={hasActiveDiscounts} />
           </Suspense>
         </div>
       </div>
@@ -123,14 +134,14 @@ export default async function PhonesPage({
               <div className="device-card p-6">
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-base font-black text-ink">Filters</h2>
-                  {(filters.brands || filters.conditions || filters.storage || filters.minPrice || filters.maxPrice) && (
+                  {(filters.brands || filters.conditions || filters.storage || filters.minPrice || filters.maxPrice || filters.onSale) && (
                     <Link href="/phones" className="text-xs font-semibold text-brand hover:underline">
                       Clear all
                     </Link>
                   )}
                 </div>
                 <Suspense fallback={<div className="h-40 animate-pulse rounded-lg bg-surface-hover" />}>
-                  <CatalogueFilters brands={brands} />
+                  <CatalogueFilters brands={brands} hasActiveDiscounts={hasActiveDiscounts} />
                 </Suspense>
               </div>
             </div>

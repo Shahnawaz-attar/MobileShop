@@ -77,112 +77,119 @@ export function TimePicker({ value, onChange, id, disabled }: TimePickerProps) {
 
           {/* Sheet Container */}
           <div 
-            className="relative z-50 w-full max-w-sm rounded-t-2xl border border-border bg-card p-6 shadow-lg animate-in slide-in-from-bottom-full sm:rounded-2xl sm:slide-in-from-bottom-10 sm:zoom-in-95"
+            className="relative z-50 flex max-h-[85dvh] w-full max-w-sm flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-lg animate-in slide-in-from-bottom-full sm:rounded-2xl sm:slide-in-from-bottom-10 sm:zoom-in-95"
             role="dialog"
             aria-modal="true"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-border/40">
-              <div>
-                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Select Time
-                </span>
-                <p className="text-2xl font-bold text-primary tabular-nums mt-0.5">
-                  {hour}:{minute} {period}
-                </p>
+            {/* Header (fixed) */}
+            <div className="shrink-0 border-b border-border/40 p-6 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    Select Time
+                  </span>
+                  <p className="text-2xl font-bold text-primary tabular-nums mt-0.5">
+                    {hour}:{minute} {period}
+                  </p>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground text-sm font-bold transition-colors"
+                >
+                  ✕
+                </button>
               </div>
-              <button 
+            </div>
+
+            {/* Scrollable selector area */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-6 pt-4">
+              {/* Selector Columns */}
+              <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/20 p-2 border border-border/40">
+                {/* Hours */}
+                <div className="flex flex-col">
+                  <span className="py-1 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Hour
+                  </span>
+                  <div className="max-h-[160px] overflow-y-auto space-y-1 pr-1 scrollbar-none">
+                    {HOURS.map((h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => handleChange(h, minute, period)}
+                        className={cn(
+                          "flex w-full items-center justify-center rounded-lg py-2 text-xs font-bold transition-all",
+                          h === hour
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-foreground hover:bg-background/80"
+                        )}
+                      >
+                        {h}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Minutes */}
+                <div className="flex flex-col border-x border-border/30 px-1">
+                  <span className="py-1 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Min
+                  </span>
+                  <div className="max-h-[160px] overflow-y-auto space-y-1 scrollbar-none">
+                    {MINUTES.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => handleChange(hour, m, period)}
+                        className={cn(
+                          "flex w-full items-center justify-center rounded-lg py-2 text-xs font-bold transition-all",
+                          m === minute
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-foreground hover:bg-background/80"
+                        )}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Period */}
+                <div className="flex flex-col">
+                  <span className="py-1 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Period
+                  </span>
+                  <div className="space-y-1.5 pt-1">
+                    {PERIODS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => handleChange(hour, minute, p)}
+                        className={cn(
+                          "flex w-full items-center justify-center rounded-lg py-2.5 text-xs font-bold transition-all",
+                          p === period
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-foreground hover:bg-background/80"
+                        )}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Confirm Action (fixed at bottom) */}
+            <div className="shrink-0 border-t border-border/40 p-6 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <Button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground text-sm font-bold transition-colors"
+                className="h-11 w-full text-sm font-bold shadow-sm"
               >
-                ✕
-              </button>
+                Done
+              </Button>
             </div>
-
-            {/* Selector Columns */}
-            <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/20 p-2 border border-border/40 mb-6">
-              {/* Hours */}
-              <div className="flex flex-col">
-                <span className="py-1 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Hour
-                </span>
-                <div className="max-h-[160px] overflow-y-auto space-y-1 pr-1 scrollbar-none">
-                  {HOURS.map((h) => (
-                    <button
-                      key={h}
-                      type="button"
-                      onClick={() => handleChange(h, minute, period)}
-                      className={cn(
-                        "flex w-full items-center justify-center rounded-lg py-2 text-xs font-bold transition-all",
-                        h === hour
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-foreground hover:bg-background/80"
-                      )}
-                    >
-                      {h}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Minutes */}
-              <div className="flex flex-col border-x border-border/30 px-1">
-                <span className="py-1 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Min
-                </span>
-                <div className="max-h-[160px] overflow-y-auto space-y-1 scrollbar-none">
-                  {MINUTES.map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => handleChange(hour, m, period)}
-                      className={cn(
-                        "flex w-full items-center justify-center rounded-lg py-2 text-xs font-bold transition-all",
-                        m === minute
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-foreground hover:bg-background/80"
-                      )}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Period */}
-              <div className="flex flex-col">
-                <span className="py-1 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Period
-                </span>
-                <div className="space-y-1.5 pt-1">
-                  {PERIODS.map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => handleChange(hour, minute, p)}
-                      className={cn(
-                        "flex w-full items-center justify-center rounded-lg py-2.5 text-xs font-bold transition-all",
-                        p === period
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-foreground hover:bg-background/80"
-                      )}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Confirm Action Button - Matching ConfirmModal Button component */}
-            <Button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="h-11 w-full text-sm font-bold shadow-sm"
-            >
-              Done
-            </Button>
           </div>
         </div>
       )}

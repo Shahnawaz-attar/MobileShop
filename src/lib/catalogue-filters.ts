@@ -59,6 +59,7 @@ export interface ActiveFilterState {
   storage: number[];
   minPrice: string;
   maxPrice: string;
+  onSale: boolean;
 }
 
 export interface CatalogueFilterHook {
@@ -70,6 +71,8 @@ export interface CatalogueFilterHook {
   toggleCondition: (condition: Condition) => void;
   /** Toggle a storage size (GB). */
   toggleStorage: (gb: number) => void;
+  /** Toggle the "On Sale" (active campaign discount) filter. */
+  toggleSale: () => void;
   /** Set the price range (values in rupees, not paise). Empty string clears. */
   setPriceRange: (min: string, max: string) => void;
   /** Remove every filter (keeps q, tab, sort, etc.). */
@@ -93,7 +96,8 @@ export function useCatalogueFilters(): CatalogueFilterHook {
     const storage = parseStorageParam(searchParams.get("storage"));
     const minPrice = searchParams.get("minPrice") ?? "";
     const maxPrice = searchParams.get("maxPrice") ?? "";
-    return { brands, conditions, storage, minPrice, maxPrice };
+    const onSale = searchParams.get("sale") === "1";
+    return { brands, conditions, storage, minPrice, maxPrice, onSale };
   }, [searchParams]);
 
   /** Push a fresh URLSearchParams, preserving unrelated params (q, tab, sort). */
@@ -125,6 +129,14 @@ export function useCatalogueFilters(): CatalogueFilterHook {
     [push, searchParams]
   );
 
+  const toggleSale = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (params.get("sale") === "1") params.delete("sale");
+    else params.set("sale", "1");
+    params.delete("cursor");
+    push(params);
+  }, [push, searchParams]);
+
   const setPriceRange = useCallback(
     (min: string, max: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -144,6 +156,7 @@ export function useCatalogueFilters(): CatalogueFilterHook {
     params.delete("storage");
     params.delete("minPrice");
     params.delete("maxPrice");
+    params.delete("sale");
     push(params);
   }, [push, searchParams]);
 
@@ -152,13 +165,15 @@ export function useCatalogueFilters(): CatalogueFilterHook {
     active.conditions.length > 0 ||
     active.storage.length > 0 ||
     Boolean(active.minPrice) ||
-    Boolean(active.maxPrice);
+    Boolean(active.maxPrice) ||
+    active.onSale;
 
   return {
     active,
     toggleBrand,
     toggleCondition,
     toggleStorage,
+    toggleSale,
     setPriceRange,
     clearAll,
     hasActiveFilters,

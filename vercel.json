@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/discount-reminders",
+      "schedule": "0 9 * * *",
+      "CRON_SECRET": "${CRON_SECRET}"
+    }
+  ]
+}

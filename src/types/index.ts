@@ -58,6 +58,17 @@ export interface PublicProductCard {
   primaryImageAlt: string | null;
   brandName: string;
   brandSlug: string;
+  /**
+   * Active timed promotion (campaign) applied to this product, if any.
+   * salePricePaise is the final price the buyer pays; originalPricePaise is the
+   * normal selling price (pricePaise) it was discounted from.
+   */
+  discount?: {
+    label: string;
+    percent: number;
+    salePricePaise: number;
+    originalPricePaise: number;
+  } | null;
 }
 
 /** Public product detail — safe for product detail page */

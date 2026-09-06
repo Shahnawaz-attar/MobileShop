@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
   LogOut,
   MessagesSquare,
+  BadgePercent,
 } from "lucide-react";
 
 const PRIMARY_ITEMS = [
@@ -27,6 +28,7 @@ const PRIMARY_ITEMS = [
 ] as const;
 
 const MORE_ITEMS = [
+  { href: "/admin/discounts", label: "Discounts", hint: "Timed offers & sales", icon: BadgePercent },
   { href: "/admin/content", label: "Content", hint: "Announcements & testimonials", icon: FileText },
   { href: "/admin/qr", label: "Shop QR", hint: "Print counter code", icon: QrCode },
   { href: "/admin/leads", label: "Leads", hint: "Buyers wanting a brand", icon: MessagesSquare },

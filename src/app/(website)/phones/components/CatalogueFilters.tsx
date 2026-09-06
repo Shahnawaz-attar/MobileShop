@@ -18,10 +18,12 @@ import type { Condition } from "@/types";
 
 interface CatalogueFiltersProps {
   brands: { id: string; name: string; slug: string }[];
+  /** True when at least one discount is currently live — only then show "On Sale". */
+  hasActiveDiscounts?: boolean;
 }
 
-export function CatalogueFilters({ brands }: CatalogueFiltersProps) {
-  const { active, toggleBrand, toggleCondition, toggleStorage, setPriceRange } =
+export function CatalogueFilters({ brands, hasActiveDiscounts = false }: CatalogueFiltersProps) {
+  const { active, toggleBrand, toggleCondition, toggleStorage, toggleSale, setPriceRange } =
     useCatalogueFilters();
 
   // Price inputs are local state; they only navigate on "Apply".
@@ -34,6 +36,21 @@ export function CatalogueFilters({ brands }: CatalogueFiltersProps) {
 
   return (
     <div className="space-y-8">
+      {/* On Sale — only shown while a discount is actually running */}
+      {hasActiveDiscounts && (
+        <>
+          <FilterCheckboxGroup title="Deals">
+            <FilterCheckboxRow
+              label="On Sale"
+              checked={active.onSale}
+              onToggle={toggleSale}
+            />
+          </FilterCheckboxGroup>
+
+          <div className="h-px w-full bg-border" />
+        </>
+      )}
+
       {/* Brands */}
       <FilterCheckboxGroup title="Brands">
         <div className="space-y-1">

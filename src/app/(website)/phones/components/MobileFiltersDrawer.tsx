@@ -7,9 +7,11 @@ import { useSearchParams } from "next/navigation";
 
 interface MobileFiltersDrawerProps {
   brands: { id: string; name: string; slug: string }[];
+  /** True when at least one discount is currently live — only then show "On Sale". */
+  hasActiveDiscounts?: boolean;
 }
 
-export function MobileFiltersDrawer({ brands }: MobileFiltersDrawerProps) {
+export function MobileFiltersDrawer({ brands, hasActiveDiscounts = false }: MobileFiltersDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const searchParams = useSearchParams();
   
@@ -19,9 +21,10 @@ export function MobileFiltersDrawer({ brands }: MobileFiltersDrawerProps) {
   const activeStorage = searchParams.get("storage")?.split(",").filter(Boolean).length || 0;
   const hasMinPrice = searchParams.has("minPrice") ? 1 : 0;
   const hasMaxPrice = searchParams.has("maxPrice") ? 1 : 0;
+  const onSale = searchParams.get("sale") === "1" ? 1 : 0;
 
   const activeFilterCount =
-    activeBrands + activeConditions + activeStorage + hasMinPrice + hasMaxPrice;
+    activeBrands + activeConditions + activeStorage + hasMinPrice + hasMaxPrice + onSale;
 
   useEffect(() => {
     if (isOpen) {
@@ -64,7 +67,7 @@ export function MobileFiltersDrawer({ brands }: MobileFiltersDrawerProps) {
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-5">
-            <CatalogueFilters brands={brands} />
+            <CatalogueFilters brands={brands} hasActiveDiscounts={hasActiveDiscounts} />
           </div>
 
           {/* Footer */}

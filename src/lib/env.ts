@@ -15,6 +15,8 @@ const serverEnvSchema = z.object({
   ANALYTICS_SALT: z.string().min(16, "ANALYTICS_SALT must be at least 16 characters").optional(),
   VAPID_PRIVATE_KEY: z.string().min(20).optional(),
   VAPID_SUBJECT: z.string().min(3).optional(),
+  /// Guards /api/cron/* endpoints. Set on Vercel; optional locally.
+  CRON_SECRET: z.string().min(16).optional(),
   ALLOW_SEED: z
     .enum(["true", "false"])
     .default("false")

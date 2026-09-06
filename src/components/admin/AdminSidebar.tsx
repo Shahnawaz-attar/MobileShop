@@ -15,6 +15,7 @@ import {
   QrCode,
   Bell,
   MessagesSquare,
+  BadgePercent,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -27,6 +28,7 @@ interface AdminSidebarProps {
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Smartphone },
+  { href: "/admin/discounts", label: "Discounts", icon: BadgePercent },
   { href: "/admin/shop", label: "Shop Settings", icon: Store },
   { href: "/admin/content", label: "Content", icon: FileText },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },

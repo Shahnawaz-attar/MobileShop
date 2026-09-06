@@ -143,8 +143,9 @@ model Brand {
   logoUrl   String?
   sortOrder Int    @default(0)
 
-  models   PhoneModel[]
-  products Product[]
+  models    PhoneModel[]
+  products  Product[]
+  discountBrands DiscountBrand[]
 }
 
 /// Catalogue model under a brand, scoped by device kind (iPhone vs iPad vs Watch).
@@ -238,6 +239,7 @@ model Product {
   brand Brand       @relation(fields: [brandId], references: [id])
   model PhoneModel? @relation(fields: [modelId], references: [id])
   media Media[]
+  discountProducts DiscountProduct[]
 
   @@index([availability, publishedAt(sort: Desc)])
   @@index([availability, pricePaise])
@@ -340,4 +342,60 @@ model BrandInterest {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// A timed price promotion the owner runs (e.g. "Diwali Sale: 20% off Apple & Samsung").
+/// A discount targets EITHER one or more whole brands (DiscountBrand rows) OR one or
+/// more specific products (DiscountProduct rows) — never both. The campaign % is applied
+/// to a product's normal selling price (pricePaise) to derive a "sale price" at display time.
+/// Campaigns auto-apply within [startsAt, endsAt] and can be force-paused with isActive=false.
+model Discount {
+  id        String   @id @default(cuid())
+  /// Short human label shown on the badge, e.g. "Diwali Sale".
+  label     String
+  /// Percentage off the normal selling price (1–90).
+  percent   Int
+  startsAt  DateTime
+  endsAt    DateTime
+  /// Manual override — false always hides the discount regardless of dates.
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Push-reminder bookkeeping (auto reminders only).
+  /// For multi-day offers: the start-of-day (UTC) we last sent a daily reminder,
+  /// so we never blast the same subscribers more than once per calendar day.
+  lastReminderDate DateTime?
+  /// For short offers (≤ 1 day): how many reminder broadcasts we've already sent,
+  /// so a sub-day sale is capped at 2 total per subscriber.
+  remindersSent Int @default(0)
+
+  brands   DiscountBrand[]
+  products DiscountProduct[]
+
+  @@index([isActive, startsAt, endsAt])
+}
+
+/// Link a Discount to one brand it applies to (a discount may cover many brands).
+model DiscountBrand {
+  id         String   @id @default(cuid())
+  discountId String
+  brandId    String
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  brand      Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@unique([discountId, brandId])
+  @@index([brandId])
+}
+
+/// Link a Discount to one specific product it applies to (a discount may cover many products).
+model DiscountProduct {
+  id         String   @id @default(cuid())
+  discountId String
+  productId  String
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([discountId, productId])
+  @@index([productId])
 }

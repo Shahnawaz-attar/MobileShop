@@ -75,14 +75,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
 
   const productUrl = `${resolvePublicAppUrl()}/phones/${product.slug}`;
-  const waText = generateProductEnquiryText(product, productUrl);
+  // Effective price the buyer pays — the campaign sale price wins when active.
+  const effectivePricePaise = product.discount
+    ? product.discount.salePricePaise
+    : product.pricePaise;
+  const waText = generateProductEnquiryText(
+    { ...product, pricePaise: effectivePricePaise },
+    productUrl
+  );
   const whatsappUrl = buildWhatsAppLink(shop.whatsapp, waText);
   const shareText = generateProductShareText(
     {
       title: product.title,
       storageGb: product.storageGb,
       colour: product.colour,
-      pricePaise: product.pricePaise,
+      pricePaise: effectivePricePaise,
       condition: CONDITION_LABELS[product.condition],
     },
     productUrl,
@@ -95,7 +102,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const primaryMedia = product.media.find(m => m.kind === "FRONT") || product.media[0];
   const variantStr = [product.storageGb ? `${product.storageGb}GB` : null, product.colour].filter(Boolean).join(" ");
   const fullName = variantStr ? `${product.title} (${variantStr})` : product.title;
-  const statusImageUrl = `/api/og/product?variant=status&title=${encodeURIComponent(fullName)}&price=${product.pricePaise / 100}&shop=${encodeURIComponent(shop.name)}${
+  const statusImageUrl = `/api/og/product?variant=status&title=${encodeURIComponent(fullName)}&price=${effectivePricePaise / 100}&shop=${encodeURIComponent(shop.name)}${
     primaryMedia
       ? `&image=${encodeURIComponent(ogSafeCloudinaryUrl(primaryMedia.url))}&imageW=${primaryMedia.width ?? 800}&imageH=${primaryMedia.height ?? 800}`
       : ""
@@ -184,20 +191,66 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {product.brand.name}{product.model?.name ? <span className="mx-2 text-ink-faint">•</span> : ""}{product.model?.name}
             </p>
 
-            <div className="mt-6 flex flex-wrap items-end gap-x-3 gap-y-2 border-b border-border pb-6 sm:mt-8 sm:pb-8">
-              <span className="text-4xl font-black leading-none tracking-tight text-ink sm:text-5xl">
-                {formatINR(product.pricePaise)}
-              </span>
-              {discount !== null && (
-                <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-start">
+            <div className="mt-6 border-b border-border pb-6 sm:mt-8 sm:pb-8">
+              {product.discount ? (
+                /* ---- 3-tier "special offer" pricing ---- */
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    {/* Special price (big) */}
+                    <span className="text-4xl font-black leading-none tracking-tight text-error sm:text-5xl">
+                      {formatINR(product.discount.salePricePaise)}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-error/10 px-2.5 py-1 text-xs font-black text-error">
+                      {product.discount.percent}% OFF · {product.discount.label}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+                    {/* Usual price (struck by the special) */}
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-ink-faint">Usual</span>
+                      <span className="font-semibold text-ink-faint line-through">{formatINR(product.discount.originalPricePaise)}</span>
+                    </span>
+                    {/* MRP (struck) */}
+                    {product.mrpPaise && product.mrpPaise > product.pricePaise && (
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-ink-faint">MRP</span>
+                        <span className="font-semibold text-ink-faint/70 line-through">{formatINR(product.mrpPaise)}</span>
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-medium text-ink-soft">
+                    Special {product.discount.label} price — limited time.
+                  </p>
+                </div>
+              ) : discount !== null && discount > 0 ? (
+                /* ---- MRP vs our price (no campaign) ---- */
+                <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
+                  <span className="text-4xl font-black leading-none tracking-tight text-ink sm:text-5xl">
+                    {formatINR(product.pricePaise)}
+                  </span>
                   {product.mrpPaise && product.mrpPaise > product.pricePaise && (
-                    <span className="text-lg font-semibold text-ink-faint line-through sm:text-xl">
-                      {formatINR(product.mrpPaise)}
+                    <span className="flex items-center gap-1.5 pb-1">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-ink-faint">MRP</span>
+                      <span className="text-lg font-semibold text-ink-faint line-through sm:text-xl">{formatINR(product.mrpPaise)}</span>
                     </span>
                   )}
-                  <span className="inline-flex items-center rounded-md bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
+                  <span className="pb-1 inline-flex items-center rounded-md bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
                     {discount}% OFF
                   </span>
+                </div>
+              ) : (
+                /* ---- Plain price ---- */
+                <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
+                  <span className="text-4xl font-black leading-none tracking-tight text-ink sm:text-5xl">
+                    {formatINR(product.pricePaise)}
+                  </span>
+                  {product.mrpPaise && product.mrpPaise > product.pricePaise && (
+                    <span className="flex items-center gap-1.5 pb-1">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-ink-faint">MRP</span>
+                      <span className="text-lg font-semibold text-ink-faint line-through sm:text-xl">{formatINR(product.mrpPaise)}</span>
+                    </span>
+                  )}
                 </div>
               )}
             </div>

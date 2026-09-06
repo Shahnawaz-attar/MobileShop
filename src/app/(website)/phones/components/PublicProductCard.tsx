@@ -23,12 +23,22 @@ interface PublicProductCardProps {
     primaryImageAlt: string | null;
     storageGb?: number | null;
     ramGb?: number | null;
+    /** Active campaign discount applied to this product (if any). */
+    discount?: {
+      label: string;
+      percent: number;
+      salePricePaise: number;
+      originalPricePaise: number;
+    } | null;
   };
   priority?: boolean;
 }
 
 export function PublicProductCard({ product, priority = false }: PublicProductCardProps) {
+  // MRP strikethrough deal (existing per-product MRP vs price).
   const discount = discountPercent(product.pricePaise, product.mrpPaise);
+  // Campaign discount (timed promo) — takes precedence over the plain MRP deal.
+  const campaign = product.discount ?? null;
 
   return (
     <Link
@@ -101,17 +111,44 @@ export function PublicProductCard({ product, priority = false }: PublicProductCa
         )}
 
         <div className="mt-auto pt-4">
-          <div className="flex items-end gap-2">
-            <span className="text-xl font-black tracking-tight text-ink sm:text-2xl">
-              {formatINR(product.pricePaise)}
+          <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
+            {/* Final price — campaign sale price wins over the plain price */}
+            <span className={`text-xl font-black tracking-tight sm:text-2xl ${campaign ? "text-error" : "text-ink"}`}>
+              {formatINR(campaign ? campaign.salePricePaise : product.pricePaise)}
             </span>
-            {product.mrpPaise && product.mrpPaise > product.pricePaise && (
-              <span className="pb-0.5 text-sm font-semibold text-ink-faint line-through">
-                {formatINR(product.mrpPaise)}
+
+            {/* Campaign strikes through the normal selling price */}
+            {campaign && (
+              <span className="flex items-center gap-1 pb-0.5">
+                <span className="text-[9px] font-black uppercase tracking-wider text-ink-faint">Usual</span>
+                <span className="text-sm font-semibold text-ink-faint line-through">
+                  {formatINR(campaign.originalPricePaise)}
+                </span>
               </span>
             )}
+            {/* MRP always struck if higher than the normal selling price */}
+            {!campaign &&
+              product.mrpPaise &&
+              product.mrpPaise > product.pricePaise && (
+                <span className="flex items-center gap-1 pb-0.5">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-ink-faint">MRP</span>
+                  <span className="text-sm font-semibold text-ink-faint line-through">
+                    {formatINR(product.mrpPaise)}
+                  </span>
+                </span>
+              )}
           </div>
-          {discount !== null && discount > 0 && (
+
+          {/* Campaign badge (timed promotion) */}
+          {campaign && (
+            <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-error/10 px-2 py-1 text-xs font-black text-error">
+              <BadgePercent className="h-3 w-3" aria-hidden="true" />
+              {campaign.percent}% OFF
+              <span className="font-bold normal-case">· {campaign.label}</span>
+            </div>
+          )}
+          {/* Plain MRP deal (only when no campaign is overriding) */}
+          {!campaign && discount !== null && discount > 0 && (
             <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-success/10 px-2 py-1 text-xs font-bold text-success">
               <BadgePercent className="h-3 w-3" aria-hidden="true" />
               Save {discount}%
