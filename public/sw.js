@@ -145,17 +145,25 @@ self.addEventListener("push", (event) => {
   /** Distinct ~2s pulse (Android). iOS ignores vibrate. */
   const vibrate = [280, 90, 280, 90, 450, 110, 700];
 
+  /**
+   * Use a unique tag per push. Reusing one tag makes a new notification REPLACE
+   * an older same-tagged one, and on many Android devices that replacement does
+   * NOT re-alert (no sound / no vibration). A unique tag guarantees every push
+   * is treated as a fresh notification that rings and vibrates.
+   */
+  const uniqueTag = `ms-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
   const options = {
     body,
     icon,
     badge: "/icons/notify-badge.png",
     vibrate,
-    tag: "mobileshop-stock",
+    tag: uniqueTag,
     renotify: true,
     silent: false,
     requireInteraction: false,
     data: { url },
-    actions: [{ action: "open", title: "Open listing" }],
+    actions: [{ action: "open", title: "Open" }],
   };
   if (image) options.image = image;
 

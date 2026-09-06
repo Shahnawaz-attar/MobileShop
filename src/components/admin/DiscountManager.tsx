@@ -7,11 +7,21 @@ import {
   updateDiscountAction,
   deleteDiscountAction,
   toggleDiscountAction,
+  sendDiscountNotificationAction,
+  type SendNotificationResult,
 } from "@/server/modules/discounts/actions";
-import { BadgePercent, Plus, Pencil, Trash2, X, Save, Power, Loader2 } from "lucide-react";
+import { BadgePercent, Plus, Pencil, Trash2, X, Save, Power, Loader2, BellRing, BellOff } from "lucide-react";
 import { format } from "date-fns";
 import { SearchableMultiSelect } from "@/components/shared/SearchableMultiSelect";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
+
+export interface NotifyStateProp {
+  sentToday: number;
+  remainingToday: number;
+  inWindow: boolean;
+  nextAllowedLabel: string | null;
+  canSend: boolean;
+}
 
 interface DiscountRow {
   id: string;
@@ -30,6 +40,7 @@ interface DiscountManagerProps {
   discounts: DiscountRow[];
   brands: { id: string; name: string; slug: string }[];
   products: { id: string; title: string; brandName: string }[];
+  notifyState?: NotifyStateProp;
 }
 
 type TargetKind = "brand" | "product";
@@ -62,7 +73,7 @@ function emptyForm(): FormState {
   };
 }
 
-export function DiscountManager({ discounts, brands, products }: DiscountManagerProps) {
+export function DiscountManager({ discounts, brands, products, notifyState }: DiscountManagerProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [creating, setCreating] = useState(false);
@@ -70,6 +81,9 @@ export function DiscountManager({ discounts, brands, products }: DiscountManager
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [notify, setNotify] = useState<NotifyStateProp | undefined>(notifyState);
+  const [notifyMsg, setNotifyMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const brandOptions = useMemo(
     () => brands.map((b) => ({ id: b.id, label: b.name })),
@@ -159,10 +173,76 @@ export function DiscountManager({ discounts, brands, products }: DiscountManager
     });
   };
 
+  // --- Manual "notify subscribers" ---
+  const sendNotify = (d: DiscountRow) => {
+    setNotifyMsg(null);
+    setSendingId(d.id);
+    startTransition(async () => {
+      const res: SendNotificationResult = await sendDiscountNotificationAction(d.id);
+      setSendingId(null);
+      if (res.success && res.state) {
+        setNotify(res.state);
+        setNotifyMsg({ type: "ok", text: "Notification sent to your subscribers." });
+        router.refresh();
+      } else {
+        setNotifyMsg({ type: "error", text: res.error ?? "Could not send notification." });
+        if (res.state) setNotify(res.state);
+      }
+    });
+  };
+
   const now = Date.now();
 
   return (
     <div className="space-y-6">
+      {/* Manual notification quota banner */}
+      {notify && (
+        <div
+          className={`flex flex-col gap-2 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between ${
+            notify.canSend
+              ? "border-success/30 bg-success/5"
+              : "border-border bg-muted/40"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <span
+              className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                notify.canSend ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {notify.canSend ? <BellRing className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+            </span>
+            <div>
+              <p className="text-sm font-bold text-foreground">
+                {notify.canSend
+                  ? `${notify.remainingToday} of 3 manual notifications left today`
+                  : "Manual notifications unavailable right now"}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {notify.inWindow
+                  ? notify.canSend
+                    ? "You can push a reminder to subscribers now (window 10 AM – 10 PM)."
+                    : notify.remainingToday <= 0
+                      ? `Daily limit reached. Next available ${notify.nextAllowedLabel ?? "tomorrow 10 AM"}.`
+                      : `Next available ${notify.nextAllowedLabel ?? "soon"}.`
+                  : `Outside the 10 AM – 10 PM window. Next available ${notify.nextAllowedLabel ?? "tomorrow 10 AM"}.`}
+              </p>
+            </div>
+          </div>
+          {notifyMsg && (
+            <p
+              className={`rounded-lg px-3 py-2 text-xs font-semibold ${
+                notifyMsg.type === "ok"
+                  ? "bg-success/10 text-success"
+                  : "bg-destructive/10 text-destructive"
+              }`}
+            >
+              {notifyMsg.text}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Header action */}
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-muted-foreground">
@@ -404,6 +484,31 @@ export function DiscountManager({ discounts, brands, products }: DiscountManager
                   </div>
 
                   <div className="flex shrink-0 items-center gap-1.5">
+                    {live && notify && (
+                      <button
+                        onClick={() => sendNotify(d)}
+                        disabled={!notify.canSend || sendingId === d.id || isPending}
+                        title={
+                          notify.canSend
+                            ? "Send a reminder to all subscribers now"
+                            : `Unavailable — ${notify.inWindow ? (notify.remainingToday <= 0 ? "daily limit reached" : "waiting for cooldown") : "outside 10 AM–10 PM window"}`
+                        }
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors ${
+                          notify.canSend
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                            : "cursor-not-allowed bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {sendingId === d.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : notify.canSend ? (
+                          <BellRing className="h-3.5 w-3.5" />
+                        ) : (
+                          <BellOff className="h-3.5 w-3.5" />
+                        )}
+                        Notify
+                      </button>
+                    )}
                     <button
                       onClick={() => toggle(d)}
                       disabled={isPending}

@@ -10,7 +10,7 @@ import {
   deleteDiscount,
   setDiscountActive,
 } from "@/server/modules/discounts";
-import { runDiscountReminderCheck, notifyDiscountUpcoming } from "@/server/modules/notify";
+import { runDiscountReminderCheck, notifyDiscountUpcoming, sendManualDiscountNotification, getDiscountNotifyState, type DiscountNotifyState } from "@/server/modules/notify";
 
 const DiscountFormSchema = z
   .object({
@@ -202,4 +202,40 @@ export async function toggleDiscountAction(id: string, isActive: boolean): Promi
     console.error("toggleDiscountAction error:", error);
     return { success: false, error: "Could not update discount", code: "INTERNAL" };
   }
+}
+
+export interface SendNotificationResult {
+  success: boolean;
+  error?: string;
+  /** Fresh quota state so the UI can update the button without a full reload. */
+  state?: DiscountNotifyState;
+}
+
+/**
+ * Manual "notify subscribers" button. Enforces the daily window, 3/day cap,
+ * 2-hour gap, and the offer's remaining time. Returns updated quota state.
+ */
+export async function sendDiscountNotificationAction(
+  discountId: string
+): Promise<SendNotificationResult> {
+  try {
+    await requireOwner();
+    const res = await sendManualDiscountNotification(discountId);
+    if (!res.ok) {
+      return { success: false, error: res.error, state: res.state };
+    }
+    revalidatePath("/admin/discounts");
+    revalidatePath("/", "layout");
+    revalidatePath("/phones");
+    return { success: true, state: res.state };
+  } catch (error) {
+    console.error("sendDiscountNotificationAction error:", error);
+    return { success: false, error: "Could not send notification. Try again." };
+  }
+}
+
+/** Read-only quota snapshot for the admin Discounts page header/buttons. */
+export async function getDiscountNotifyStateAction(): Promise<DiscountNotifyState> {
+  await requireOwner();
+  return getDiscountNotifyState();
 }

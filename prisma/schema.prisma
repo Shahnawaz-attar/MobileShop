@@ -372,6 +372,7 @@ model Discount {
 
   brands   DiscountBrand[]
   products DiscountProduct[]
+  notifyLogs DiscountNotifyLog[]
 
   @@index([isActive, startsAt, endsAt])
 }
@@ -398,4 +399,16 @@ model DiscountProduct {
 
   @@unique([discountId, productId])
   @@index([productId])
+}
+
+/// One manual "notify subscribers" tap by the owner on a running offer.
+/// Used to enforce the daily manual-send quota (3/day, 10am–10pm, spaced out).
+model DiscountNotifyLog {
+  id         String   @id @default(cuid())
+  discountId String
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([discountId, createdAt])
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireOwner } from "@/server/auth/guards";
 import { listDiscounts } from "@/server/modules/discounts";
 import { listBrands } from "@/server/modules/catalog";
+import { getDiscountNotifyState } from "@/server/modules/notify";
 import { db } from "@/server/db/client";
 import { DiscountManager } from "@/components/admin/DiscountManager";
 
@@ -14,7 +15,7 @@ export default async function AdminDiscountsPage() {
 
   // Lightweight fetch of AVAILABLE products (id/title/brand) for the picker —
   // avoids the heavier admin list + fuzzy search path.
-  const [discounts, brands, productRows] = await Promise.all([
+  const [discounts, brands, productRows, notifyState] = await Promise.all([
     listDiscounts(),
     listBrands(),
     db.product.findMany({
@@ -27,6 +28,7 @@ export default async function AdminDiscountsPage() {
         brand: { select: { name: true } },
       },
     }),
+    getDiscountNotifyState(),
   ]);
 
   return (
@@ -59,6 +61,13 @@ export default async function AdminDiscountsPage() {
           title: p.title,
           brandName: p.brand.name,
         }))}
+        notifyState={{
+          sentToday: notifyState.sentToday,
+          remainingToday: notifyState.remainingToday,
+          inWindow: notifyState.inWindow,
+          nextAllowedLabel: notifyState.nextAllowedLabel,
+          canSend: notifyState.canSend,
+        }}
       />
     </div>
   );

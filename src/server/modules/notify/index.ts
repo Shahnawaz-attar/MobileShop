@@ -414,3 +414,226 @@ export async function runDiscountReminderCheck(): Promise<{ sent: number; checke
   }
   return { sent, checked: live.length };
 }
+
+// ---------------------------------------------------------------
+// Manual "notify subscribers" button (owner override)
+// ---------------------------------------------------------------
+
+/** Shop runs in India (IST, UTC+5:30, no DST) — window + "today" use IST. */
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+/** Manual sends are only allowed between these IST hours (10 AM – 10 PM). */
+const MANUAL_WINDOW_START_HOUR = 10;
+const MANUAL_WINDOW_END_HOUR = 22;
+/** Max manual discount pushes per IST day (across all live offers). */
+export const MANUAL_MAX_PER_DAY = 3;
+/** Minimum gap between two manual pushes (so they don't cluster). */
+const MANUAL_GAP_MS = 2 * 60 * 60 * 1000;
+/** A manual push is pointless if the offer has less than this much time left. */
+const MANUAL_MIN_REMAINING_MS = 30 * 60 * 1000;
+
+/** IST wall-clock parts for a UTC instant. */
+function istParts(date: Date) {
+  const shifted = new Date(date.getTime() + IST_OFFSET_MS);
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth(),
+    day: shifted.getUTCDate(),
+    hour: shifted.getUTCHours(),
+    minute: shifted.getUTCMinutes(),
+  };
+}
+
+/** UTC instant of the start of the current IST day. */
+function istDayStart(date: Date): Date {
+  const p = istParts(date);
+  return new Date(Date.UTC(p.year, p.month, p.day) - IST_OFFSET_MS);
+}
+
+export interface DiscountNotifyState {
+  /** Manual pushes already sent this IST day. */
+  sentToday: number;
+  /** Manual pushes still available this IST day (0–3). */
+  remainingToday: number;
+  /** True when now is inside the 10 AM – 10 PM IST window. */
+  inWindow: boolean;
+  /** Next allowed manual-send instant (gap or next-day window), else null. */
+  nextAllowedAt: Date | null;
+  /** Human label for nextAllowedAt (e.g. "2:10 PM" or "tomorrow 10:00 AM"). */
+  nextAllowedLabel: string | null;
+  /** True if push is configured & there is quota — button can attempt. */
+  canSend: boolean;
+}
+
+/**
+ * Snapshot of the manual-notification quota for the current IST day, plus the
+ * earliest instant a manual push can be sent (respecting the 10 AM–10 PM window
+ * and the 2-hour gap). Per-offer "remaining time" is applied separately by the
+ * caller because it depends on which offer's button is pressed.
+ */
+export async function getDiscountNotifyState(now = new Date()): Promise<DiscountNotifyState> {
+  const dayStart = istDayStart(now);
+  const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+
+  const logs = await db.discountNotifyLog.findMany({
+    where: { createdAt: { gte: dayStart, lt: dayEnd } },
+    orderBy: { createdAt: "desc" },
+    select: { createdAt: true },
+    take: MANUAL_MAX_PER_DAY,
+  });
+
+  const sentToday = logs.length;
+  const remainingToday = Math.max(0, MANUAL_MAX_PER_DAY - sentToday);
+  const p = istParts(now);
+  const minutesIntoDay = p.hour * 60 + p.minute;
+  const inWindow =
+    minutesIntoDay >= MANUAL_WINDOW_START_HOUR * 60 &&
+    minutesIntoDay < MANUAL_WINDOW_END_HOUR * 60;
+
+  // Earliest allowed instant.
+  let nextAllowedAt: Date | null = null;
+  if (inWindow && remainingToday > 0) {
+    // Respect the 2h gap after the last manual send.
+    const last = logs[0];
+    if (last) {
+      const gapEnd = new Date(last.createdAt.getTime() + MANUAL_GAP_MS);
+      if (gapEnd.getTime() > now.getTime()) nextAllowedAt = gapEnd;
+    }
+  }
+  if (!nextAllowedAt) {
+    if (inWindow && remainingToday > 0) {
+      nextAllowedAt = now; // can send right now
+    } else if (remainingToday > 0) {
+      // Next day's window opens at 10 AM IST.
+      nextAllowedAt = new Date(
+        Date.UTC(p.year, p.month, p.day, MANUAL_WINDOW_START_HOUR, 0) - IST_OFFSET_MS
+      );
+    } else {
+      // Quota used up — next IST day window.
+      const tomorrow = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+      nextAllowedAt = new Date(
+        Date.UTC(
+          tomorrow.getUTCFullYear(),
+          tomorrow.getUTCMonth(),
+          tomorrow.getUTCDate(),
+          MANUAL_WINDOW_START_HOUR,
+          0
+        ) - IST_OFFSET_MS
+      );
+    }
+  }
+
+  const canSend = inWindow && remainingToday > 0 && nextAllowedAt.getTime() <= now.getTime();
+
+  return {
+    sentToday,
+    remainingToday,
+    inWindow,
+    nextAllowedAt,
+    nextAllowedLabel: nextAllowedAt ? formatManualNext(nextAllowedAt, now) : null,
+    canSend,
+  };
+}
+
+function formatManualNext(next: Date, now: Date): string {
+  const p = istParts(next);
+  const n = istParts(now);
+  const sameDay = p.year === n.year && p.month === n.month && p.day === n.day;
+  const h12 = p.hour % 12 === 0 ? 12 : p.hour % 12;
+  const ampm = p.hour < 12 ? "AM" : "PM";
+  const time = `${h12}:${String(p.minute).padStart(2, "0")} ${ampm}`;
+  return sameDay ? time : `tomorrow ${time}`;
+}
+
+/**
+ * How many manual nudges still make sense for THIS offer given how much time it
+ * has left. A short same-day sale (e.g. 4 hours) naturally allows fewer than a
+ * week-long one. Returns 0 when the offer is over / about to end.
+ */
+export function remainingManualNudgesForOffer(remainingMs: number): number {
+  if (remainingMs < MANUAL_MIN_REMAINING_MS) return 0;
+  const slotsFit = Math.floor(remainingMs / MANUAL_GAP_MS);
+  return Math.max(1, slotsFit);
+}
+
+export interface ManualSendResult {
+  ok: boolean;
+  error?: string;
+  state: DiscountNotifyState;
+}
+
+/**
+ * Owner-triggered "notify subscribers" for a live offer. Enforces:
+ *  - offer is active and currently live, with ≥ 30 min remaining;
+ *  - 10 AM – 10 PM IST window;
+ *  - ≤ 3 manual sends per IST day (global);
+ *  - ≥ 2 h gap since the last manual send;
+ *  - the offer's remaining time (short sales allow fewer nudges).
+ */
+export async function sendManualDiscountNotification(
+  discountId: string
+): Promise<ManualSendResult> {
+  const state = await getDiscountNotifyState();
+  const now = new Date();
+  const discount = await db.discount.findUnique({
+    where: { id: discountId },
+    select: { id: true, label: true, percent: true, startsAt: true, endsAt: true, isActive: true },
+  });
+
+  if (!discount) return { ok: false, error: "Offer not found.", state };
+  if (!discount.isActive) return { ok: false, error: "This offer is paused. Activate it first.", state };
+  const remainingMs = discount.endsAt.getTime() - now.getTime();
+  if (now.getTime() < discount.startsAt.getTime())
+    return { ok: false, error: "This offer hasn't started yet.", state };
+  if (remainingMs < 0)
+    return { ok: false, error: "This offer has already ended.", state };
+
+  // Per-offer remaining-time adaptation.
+  if (remainingManualNudgesForOffer(remainingMs) < 1)
+    return { ok: false, error: "Too little time left on this offer to notify.", state };
+
+  if (!state.inWindow)
+    return {
+      ok: false,
+      error: `Notifications can only be sent between 10 AM and 10 PM. Next available ${state.nextAllowedLabel}.`,
+      state,
+    };
+  if (state.remainingToday <= 0)
+    return {
+      ok: false,
+      error: `Daily manual limit reached (${MANUAL_MAX_PER_DAY}/day). Next available ${state.nextAllowedLabel}.`,
+      state,
+    };
+  if (state.nextAllowedAt && state.nextAllowedAt.getTime() > now.getTime())
+    return {
+      ok: false,
+      error: `Please wait before sending again. Next available ${state.nextAllowedLabel}.`,
+      state,
+    };
+  if (!isPushConfigured())
+    return { ok: false, error: "Add VAPID keys to enable push notifications.", state };
+
+  // Build a reminder-style message and broadcast it.
+  const { shopName, icon } = await shopNotifyAssets();
+  const durationMs = discount.endsAt.getTime() - discount.startsAt.getTime();
+  const isShort = durationMs <= MULTI_DAY_THRESHOLD_MS;
+  const body = isShort
+    ? `${discount.label}: ${discount.percent}% off today — tap to grab the deal.`
+    : `${discount.label}: ${discount.percent}% off is live — tap to grab the deal.`;
+
+  const summary = await getNotifySummary();
+  if (summary.remainingAlerts <= 0)
+    return { ok: false, error: "Daily broadcast limit reached. Try again tomorrow.", state };
+
+  await tryAutoBroadcast({
+    kind: "ANNOUNCEMENT",
+    title: clip(`${shopName} · ${discount.percent}% OFF`, 80),
+    body: clip(body, 140),
+    url: "/phones?sale=1",
+    icon,
+  });
+
+  await db.discountNotifyLog.create({ data: { discountId } });
+
+  const updated = await getDiscountNotifyState();
+  return { ok: true, state: updated };
+}
