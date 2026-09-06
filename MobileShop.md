@@ -2365,7 +2365,6 @@ Counter Printables (QR Kit):
 You already have QrKitActions.tsx and api/qr.png. Extend this to generate a printable A5 PDF flyer ("Scan to see today's live stock") that the owner can stick on their glass display counter.
 
 
-I see StockAlertSubscribe.tsx in your components. Wiring this up so buyers can drop their WhatsApp number to get notified when a specific brand (e.g., "Notify me when you get Google Pixel phones") arrives will help shop owners capture high-intent leads.
 
 
 1. 1-Tap WhatsApp Status Generator (Client-Side Canvas / SVG)

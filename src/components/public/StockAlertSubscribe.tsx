@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { usePathname } from "next/navigation";
+import { BellRing, BellOff } from "lucide-react";
 import { subscribePushAction, unsubscribePushAction } from "@/server/modules/notify/actions";
 
 function urlBase64ToUint8Array(base64: string) {
@@ -97,9 +98,19 @@ export function StockAlertSubscribe({ vapidPublicKey }: { vapidPublicKey: string
         type="button"
         disabled={isPending}
         onClick={() => void (status === "on" ? disable() : enable())}
-        className="inline-flex min-h-11 items-center rounded-full bg-black px-4 text-xs font-bold text-white shadow-xl"
+        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-black px-4 text-xs font-bold text-white shadow-xl"
       >
-        {status === "on" ? "Alerts on" : "Notify me — new stock"}
+        {status === "on" ? (
+          <>
+            <BellOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+            Alerts on
+          </>
+        ) : (
+          <>
+            <BellRing className="h-4 w-4 shrink-0" aria-hidden="true" />
+            Notify me — new stock
+          </>
+        )}
       </button>
       {message && <p className="rounded-lg bg-white px-2 py-1 text-[11px] text-slate-600 shadow">{message}</p>}
     </div>

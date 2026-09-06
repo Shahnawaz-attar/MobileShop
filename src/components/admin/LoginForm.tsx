@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { LogIn, Loader2 } from "lucide-react";
 import { loginAction } from "@/server/auth/actions";
 import type { ActionResult } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -65,8 +66,13 @@ export function LoginForm() {
       <Button
         type="submit"
         disabled={isPending}
-        className="w-full h-11 text-base sm:text-sm font-semibold rounded-lg shadow-sm"
+        className="w-full h-11 gap-2 text-base sm:text-sm font-semibold rounded-lg shadow-sm"
       >
+        {isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <LogIn className="h-4 w-4" aria-hidden="true" />
+        )}
         {isPending ? "Signing in…" : "Sign In"}
       </Button>
     </form>

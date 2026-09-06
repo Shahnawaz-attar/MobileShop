@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Send, Loader2 } from "lucide-react";
 import { sendStockBroadcastAction } from "@/server/modules/notify/actions";
 
 export function NotifyBroadcastForm({ remainingToday }: { remainingToday: number }) {
@@ -53,8 +54,13 @@ export function NotifyBroadcastForm({ remainingToday }: { remainingToday: number
       <button
         type="submit"
         disabled={isPending || remainingToday <= 0}
-        className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
       >
+        {isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <Send className="h-4 w-4" aria-hidden="true" />
+        )}
         {isPending ? "Sending…" : "Send stock alert"}
       </button>
       {note && <p className="text-sm text-muted-foreground">{note}</p>}

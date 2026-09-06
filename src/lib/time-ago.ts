@@ -13,10 +13,10 @@ export function formatListedAgo(publishedAt: Date | null): string | null {
   return formatDistanceToNow(publishedAt, { addSuffix: true });
 }
 
-/** Listed within the last 3 days — show "Fresh" urgency. */
+/** Listed within the last 7 days — show "Fresh" urgency. */
 export function isFreshListing(publishedAt: Date | null): boolean {
   if (!publishedAt) return false;
-  return differenceInHours(new Date(), publishedAt) < 72;
+  return differenceInHours(new Date(), publishedAt) < 24 * 7;
 }
 
 export function plural(count: number, singular: string, pluralForm?: string) {

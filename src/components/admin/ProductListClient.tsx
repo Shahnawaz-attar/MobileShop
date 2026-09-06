@@ -4,6 +4,7 @@ import { useState, useTransition, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
+import { ExternalLink, BadgeCheck, Undo2, Trash2, ChevronDown, Loader2 } from "lucide-react";
 import { setAvailabilityAction, deleteProductAction, loadMoreAdminProductsAction } from "@/server/modules/catalog/actions";
 import type { Availability, Condition } from "@/types";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -288,6 +289,7 @@ export function ProductListClient({
                     className={buttonVariants({ variant: "outline", size: "sm" })}
                     title="Preview public page"
                   >
+                    <ExternalLink className="h-3.5 w-3.5" />
                     Preview
                   </a>
                 )}
@@ -299,6 +301,7 @@ export function ProductListClient({
                     onClick={() => handleSetAvailability(product.id, "SOLD")}
                     className="bg-success/10 text-success hover:bg-success/20"
                   >
+                    <BadgeCheck className="h-3.5 w-3.5" />
                     Mark Sold
                   </Button>
                 )}
@@ -309,6 +312,7 @@ export function ProductListClient({
                     disabled={isPending}
                     onClick={() => handleSetAvailability(product.id, "AVAILABLE")}
                   >
+                    <Undo2 className="h-3.5 w-3.5" />
                     Available
                   </Button>
                 )}
@@ -320,6 +324,7 @@ export function ProductListClient({
                   disabled={isPending}
                   className="bg-destructive/10 text-destructive hover:bg-destructive/20"
                 >
+                  <Trash2 className="h-3.5 w-3.5" />
                   Delete
                 </Button>
               )}
@@ -337,6 +342,11 @@ export function ProductListClient({
             disabled={isLoadingMore}
             className="w-full sm:w-auto h-12 sm:h-11 px-8 text-base sm:text-sm font-semibold rounded-xl"
           >
+            {isLoadingMore ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
             {isLoadingMore ? "Loading..." : "Load more"}
           </Button>
         </div>

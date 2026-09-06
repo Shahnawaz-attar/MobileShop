@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { toPng, toBlob } from "html-to-image";
+import { Download, Share2, Loader2 } from "lucide-react";
 import { formatINR } from "@/lib/money";
 import { CONDITION_LABELS } from "@/lib/constants";
 
@@ -129,7 +130,12 @@ export function WhatsAppStatusGenerator({
           disabled={busy !== null}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {busy === "download" ? "Generating…" : "⬇ Download poster"}
+          {busy === "download" ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Download className="h-4 w-4" aria-hidden="true" />
+          )}
+          {busy === "download" ? "Generating…" : "Download poster"}
         </button>
         <button
           type="button"
@@ -137,6 +143,11 @@ export function WhatsAppStatusGenerator({
           disabled={busy !== null}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#25D366]/40 bg-[#25D366]/10 px-4 text-sm font-semibold text-[#128C4A] transition-opacity hover:opacity-90 disabled:opacity-50"
         >
+          {busy === "share" ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Share2 className="h-4 w-4" aria-hidden="true" />
+          )}
           {busy === "share" ? "Preparing…" : "Share to Status"}
         </button>
       </div>

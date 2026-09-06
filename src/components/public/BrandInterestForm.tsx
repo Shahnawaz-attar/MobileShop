@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { BellRing } from "lucide-react";
 import { createBrandInterestAction } from "@/server/modules/leads/actions";
 import { cn } from "@/lib/utils";
 
@@ -93,8 +94,9 @@ export function BrandInterestForm() {
         type="button"
         onClick={submit}
         disabled={isPending}
-        className="btn-dark mt-3 w-full !min-h-0 py-2.5 text-sm disabled:opacity-50"
+        className="btn-dark mt-3 flex w-full items-center justify-center gap-2 !min-h-0 py-2.5 text-sm disabled:opacity-50"
       >
+        <BellRing className="h-4 w-4 shrink-0" aria-hidden="true" />
         {isPending ? "Saving…" : "Notify me on WhatsApp"}
       </button>
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowRight, MapPin } from "lucide-react";
 import { PublicProductCard } from "./phones/components/PublicProductCard";
 import { listPublicProducts, listBrands, listPublicSoldProducts, getHeroProduct } from "@/server/modules/catalog";
 import { getShop, toPublicShopInfo } from "@/server/modules/shop";
@@ -248,6 +249,7 @@ export default async function HomePage() {
               </div>
               <Link href="/phones?sort=NEWEST" className="btn-ghost hidden !min-h-0 !px-4 py-2 text-xs sm:inline-flex">
                 View all
+                <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               </Link>
             </FadeIn>
 
@@ -272,6 +274,7 @@ export default async function HomePage() {
             <div className="mt-8 text-center sm:hidden">
               <Link href="/phones?sort=NEWEST" className="btn-ghost w-full">
                 View all latest
+                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
               </Link>
             </div>
           </div>
@@ -511,10 +514,12 @@ export default async function HomePage() {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="btn-dark">
+                  <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
                   Open in Maps
                 </a>
                 <Link href="/phones" className="btn-ghost">
                   Browse devices
+                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
                 </Link>
               </div>
             </FadeIn>
@@ -530,8 +535,9 @@ export default async function HomePage() {
                   href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 rounded-full bg-ink px-3.5 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-80"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-3.5 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-80"
                 >
+                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                   Open in Maps
                 </a>
               </div>

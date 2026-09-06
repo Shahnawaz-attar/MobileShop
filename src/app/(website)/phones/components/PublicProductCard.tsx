@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { BadgePercent } from "lucide-react";
 import { formatINR } from "@/lib/money";
 import { CONDITION_LABELS } from "@/lib/constants";
 import { ProductEngagement } from "@/components/public/ProductEngagement";
@@ -115,7 +116,7 @@ export function PublicProductCard({ product, priority = false }: PublicProductCa
           </div>
           {discount > 0 && (
             <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-success/10 px-2 py-1 text-xs font-bold text-success">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m12 14 4-4" /><path d="M3.34 19a10 10 0 1 1 17.32 0" /></svg>
+              <BadgePercent className="h-3 w-3" aria-hidden="true" />
               Save {discount}%
             </div>
           )}

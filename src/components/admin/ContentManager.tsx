@@ -26,6 +26,8 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  Save,
+  Check,
 } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -299,7 +301,7 @@ function AnnouncementPanel({ items, brands }: { items: AnnouncementItem[], brand
             </label>
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={isPending} className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50">
-                {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 {editingItem ? "Save Changes" : "Create"}
               </button>
               <button type="button" onClick={() => setShowForm(false)} className="rounded-xl px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
@@ -514,7 +516,7 @@ function TestimonialPanel({ items }: { items: TestimonialItem[] }) {
             </div>
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={isPending} className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50">
-                {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 {editingItem ? "Save Changes" : "Add"}
               </button>
               <button type="button" onClick={() => setShowForm(false)} className="rounded-xl px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-muted transition-colors">Cancel</button>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Smartphone, CircleDollarSign, FileEdit, ImageOff, AlertTriangle, Clock, Eye, ArrowRight } from "lucide-react";
 import { db } from "@/server/db/client";
 import { formatINR } from "@/lib/money";
 
@@ -48,10 +49,10 @@ export default async function AdminDashboardPage() {
   ]);
 
   const stats = [
-    { label: "Live phones", value: availableCount, icon: "📱", href: "/admin/products?tab=AVAILABLE" },
-    { label: "Sold", value: soldCount, icon: "💰", href: "/admin/products?tab=SOLD" },
-    { label: "Drafts", value: draftCount, icon: "📝", href: "/admin/products?tab=DRAFT" },
-    { label: "Missing photos", value: missingPhotosCount, icon: "🖼️", href: "/admin/products" },
+    { label: "Live phones", value: availableCount, icon: Smartphone, href: "/admin/products?tab=AVAILABLE" },
+    { label: "Sold", value: soldCount, icon: CircleDollarSign, href: "/admin/products?tab=SOLD" },
+    { label: "Drafts", value: draftCount, icon: FileEdit, href: "/admin/products?tab=DRAFT" },
+    { label: "Missing photos", value: missingPhotosCount, icon: ImageOff, href: "/admin/products" },
   ];
 
   return (
@@ -77,7 +78,7 @@ export default async function AdminDashboardPage() {
             className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-md"
           >
             <div className="flex items-center justify-between">
-              <span className="text-3xl transition-transform duration-300 group-hover:scale-110">{stat.icon}</span>
+              <stat.icon className="h-8 w-8 text-primary" aria-hidden="true" />
             </div>
             <div className="mt-5">
               <p className="text-3xl font-black tracking-tight text-foreground">
@@ -93,7 +94,9 @@ export default async function AdminDashboardPage() {
       {missingPhotosCount > 0 && (
         <div className="mt-8 overflow-hidden rounded-2xl border border-warning/30 bg-warning/5 p-6 shadow-sm">
           <div className="flex items-start gap-4">
-            <span className="text-2xl" aria-hidden="true">⚠️</span>
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-warning/15 text-warning">
+              <AlertTriangle className="h-6 w-6" aria-hidden="true" />
+            </span>
             <div className="flex-1">
               <h2 className="text-base font-bold text-warning">
                 {missingPhotosCount} {missingPhotosCount === 1 ? "phone needs" : "phones need"} photos
@@ -103,9 +106,10 @@ export default async function AdminDashboardPage() {
               </p>
               <Link
                 href="/admin/products"
-                className="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-warning px-6 text-sm font-bold text-warning-foreground shadow-sm transition-all hover:bg-warning/90 hover:shadow-md"
+                className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-warning px-6 text-sm font-bold text-warning-foreground shadow-sm transition-all hover:bg-warning/90 hover:shadow-md"
               >
                 Review listings
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
           </div>
@@ -119,7 +123,7 @@ export default async function AdminDashboardPage() {
           <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
             <div className="border-b border-border/50 bg-muted/20 px-6 py-5">
               <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
-                <span aria-hidden="true">⏱️</span> Live for 30+ days
+                <Clock className="h-5 w-5 text-muted-foreground" aria-hidden="true" /> Live for 30+ days
               </h2>
               <p className="mt-1.5 text-xs font-medium text-muted-foreground">
                 These phones may be sold already. Keep stock accurate to build trust.
@@ -150,7 +154,7 @@ export default async function AdminDashboardPage() {
           <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
             <div className="border-b border-border/50 bg-muted/20 px-6 py-5">
               <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
-                <span aria-hidden="true">👀</span> Most viewed
+                <Eye className="h-5 w-5 text-muted-foreground" aria-hidden="true" /> Most viewed
               </h2>
               <p className="mt-1.5 text-xs font-medium text-muted-foreground">
                 Your most popular listings based on customer views.

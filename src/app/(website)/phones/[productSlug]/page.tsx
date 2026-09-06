@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { HardDrive, Cpu, Palette, BatteryMedium, ShieldCheck, Smartphone, Package, PlugZap, Cable } from "lucide-react";
 import { getPublicProduct } from "@/server/modules/catalog";
 import { getShop } from "@/server/modules/shop";
 import { formatINR } from "@/lib/money";
@@ -232,30 +233,45 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {product.storageGb && (
                   <div className="device-card p-5">
+                    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                      <HardDrive className="h-5 w-5" aria-hidden="true" />
+                    </span>
                     <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-ink-faint">Storage</p>
                     <p className="text-xl font-bold text-ink">{product.storageGb} GB</p>
                   </div>
                 )}
                 {product.ramGb && (
                   <div className="device-card p-5">
+                    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                      <Cpu className="h-5 w-5" aria-hidden="true" />
+                    </span>
                     <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-ink-faint">RAM</p>
                     <p className="text-xl font-bold text-ink">{product.ramGb} GB</p>
                   </div>
                 )}
                 {product.colour && (
                   <div className="device-card p-5">
+                    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                      <Palette className="h-5 w-5" aria-hidden="true" />
+                    </span>
                     <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-ink-faint">Colour</p>
                     <p className="text-xl font-bold text-ink">{product.colour}</p>
                   </div>
                 )}
                 {product.batteryPct && (
                   <div className="device-card p-5">
+                    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                      <BatteryMedium className="h-5 w-5" aria-hidden="true" />
+                    </span>
                     <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-ink-faint">Battery</p>
                     <p className="text-xl font-bold text-ink">{product.batteryPct}%</p>
                   </div>
                 )}
                 {product.warrantyMonths !== null && product.warrantyMonths > 0 && (
                   <div className="device-card p-5">
+                    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                      <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                    </span>
                     <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-ink-faint">Warranty</p>
                     <p className="text-xl font-bold text-ink">{product.warrantyMonths} Months</p>
                   </div>
@@ -269,14 +285,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <li className="device-card flex items-center gap-4 p-4">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    <Smartphone className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <span className="text-base font-bold text-ink">The Device</span>
                 </li>
                 {product.hasBox && (
                   <li className="device-card flex items-center gap-4 p-4">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink text-white">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                      <Package className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <span className="text-base font-bold text-ink">Original Box</span>
                   </li>
@@ -284,7 +300,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.hasCharger && (
                   <li className="device-card flex items-center gap-4 p-4">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink text-white">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                      <PlugZap className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <span className="text-base font-bold text-ink">Power Adapter</span>
                   </li>
@@ -292,7 +308,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.hasCable && (
                   <li className="device-card flex items-center gap-4 p-4">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink text-white">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                      <Cable className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <span className="text-base font-bold text-ink">Charging Cable</span>
                   </li>

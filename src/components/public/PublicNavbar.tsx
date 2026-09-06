@@ -3,12 +3,21 @@
 import Link from "next/link";
 import { Suspense, useState, useEffect } from "react";
 import { AutocompleteSearch } from "@/components/shared/AutocompleteSearch";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home, Smartphone, Apple, Store, Info } from "lucide-react";
 
 interface PublicNavbarProps {
   shopName: string;
   logoUrl: string | null;
 }
+
+/** Icons for the mobile menu rows. */
+const MOBILE_NAV = [
+  { href: "/", label: "Home", Icon: Home },
+  { href: "/phones", label: "All Devices", Icon: Smartphone },
+  { href: "/phones?brands=apple", label: "Apple iPhones", Icon: Apple },
+  { href: "/phones?brands=samsung", label: "Samsung Galaxy", Icon: Store },
+  { href: "/about", label: "About", Icon: Info },
+];
 
 export function PublicNavbar({ shopName, logoUrl }: PublicNavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -47,6 +56,13 @@ export function PublicNavbar({ shopName, logoUrl }: PublicNavbarProps) {
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-1 md:flex">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-ink-soft transition-colors hover:bg-surface-hover hover:text-ink"
+            >
+              <Home className="h-4 w-4" aria-hidden="true" />
+              Home
+            </Link>
             {[
               { href: "/phones", label: "All Devices" },
               { href: "/phones?brands=apple", label: "iPhones" },
@@ -126,21 +142,16 @@ export function PublicNavbar({ shopName, logoUrl }: PublicNavbarProps) {
             </div>
 
             <nav className="mb-5 flex flex-col gap-1">
-              {[
-                { href: "/phones", label: "All Devices", icon: "📱" },
-                { href: "/phones?brands=apple", label: "Apple iPhones" },
-                { href: "/phones?brands=samsung", label: "Samsung Galaxy" },
-                { href: "/about", label: "About" },
-              ].map((item) => (
+              {MOBILE_NAV.map(({ href, label, Icon }) => (
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  key={href}
+                  href={href}
                   onClick={() => setIsMenuOpen(false)}
                   className="group flex min-h-[52px] items-center justify-between rounded-2xl px-4 py-3 text-lg font-bold text-ink transition-colors hover:bg-surface-hover active:bg-border"
                 >
                   <span className="flex items-center gap-3">
-                    {item.icon && <span className="text-lg">{item.icon}</span>}
-                    {item.label}
+                    <Icon className="h-5 w-5 shrink-0 text-ink-soft" aria-hidden="true" />
+                    {label}
                   </span>
                   <span className="text-ink-faint transition-transform group-hover:translate-x-1">&rarr;</span>
                 </Link>

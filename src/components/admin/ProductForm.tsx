@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Rocket, Save, X, Loader2 } from "lucide-react";
 import {
   createProductAction,
   updateProductAction,
@@ -672,6 +673,7 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
           disabled={isPending}
           className="h-12 flex-1 sm:flex-none px-6 rounded-xl"
         >
+          <X className="h-4 w-4" />
           Cancel
         </Button>
         <Button
@@ -679,6 +681,13 @@ export function ProductForm({ brands, models, product, shopName, publicAppUrl }:
           disabled={isPending}
           className="h-12 flex-1 sm:flex-none px-8 rounded-xl shadow-md"
         >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : availability === "AVAILABLE" && !product ? (
+            <Rocket className="h-4 w-4" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {isPending
             ? "Saving…"
             : availability === "AVAILABLE" && !product
