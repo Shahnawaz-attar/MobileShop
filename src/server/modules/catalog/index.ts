@@ -1,9 +1,11 @@
+import { cache } from "react";
 import { db } from "@/server/db/client";
 import { normalizeBillMonth } from "@/lib/bill-date";
 import { notifyProductListed } from "@/server/modules/notify";
 import { resolveBillViewUrl, isPdfBillUrl } from "@/lib/image";
 import { buildProductSlug, slugify } from "@/lib/slug";
 import { deleteProductMedia } from "@/server/modules/media";
+import { fuzzyMatchProducts, fuzzyMatchBrands, fuzzyMatchModels } from "./fuzzy";
 import type { Availability, Condition, DeviceType } from "@/types";
 import { z } from "zod";
 
@@ -165,15 +167,32 @@ export async function listAdminProducts(filters: AdminFilters = {}) {
 
   if (parsed.q) {
     const q = parsed.q;
-    where.OR = [
-      { title: { contains: q, mode: "insensitive" } },
-      { brand: { name: { contains: q, mode: "insensitive" } } },
-      { model: { name: { contains: q, mode: "insensitive" } } },
-      { searchText: { contains: q.toLowerCase() } },
-      { description: { contains: q, mode: "insensitive" } },
-      { conditionNotes: { contains: q, mode: "insensitive" } },
-      { internalNotes: { contains: q, mode: "insensitive" } },
-    ];
+    // Typo-tolerant fuzzy search (admin searches across whichever tab is active).
+    const availability =
+      parsed.availability != null
+        ? [parsed.availability]
+        : (["AVAILABLE", "RESERVED", "SOLD", "DRAFT"] as Availability[]);
+    const fuzzy = await fuzzyMatchProducts({ q, availability, limit: 100 });
+    const fuzzyIds = fuzzy.map((f) => f.id);
+
+    if (fuzzyIds.length > 0) {
+      where.OR = [
+        { id: { in: fuzzyIds } },
+        { description: { contains: q, mode: "insensitive" } },
+        { conditionNotes: { contains: q, mode: "insensitive" } },
+        { internalNotes: { contains: q, mode: "insensitive" } },
+      ];
+    } else {
+      where.OR = [
+        { title: { contains: q, mode: "insensitive" } },
+        { brand: { name: { contains: q, mode: "insensitive" } } },
+        { model: { name: { contains: q, mode: "insensitive" } } },
+        { searchText: { contains: q.toLowerCase() } },
+        { description: { contains: q, mode: "insensitive" } },
+        { conditionNotes: { contains: q, mode: "insensitive" } },
+        { internalNotes: { contains: q, mode: "insensitive" } },
+      ];
+    }
   }
 
   if (parsed.brands && parsed.brands.length > 0) {
@@ -276,19 +295,29 @@ export async function listPublicProducts(filters: PublicFilters = {}) {
 
   if (parsed.q) {
     const q = parsed.q;
-    where.OR = [
-      // Title first (most relevant)
-      { title: { contains: q, mode: "insensitive" } },
-      // Brand name (e.g. "apple" matches all Apple devices)
-      { brand: { name: { contains: q, mode: "insensitive" } } },
-      // Model name (e.g. "iPhone 13", "Galaxy S24")
-      { model: { name: { contains: q, mode: "insensitive" } } },
-      // Full-text search blob (title + specs + colour + condition)
-      { searchText: { contains: q.toLowerCase() } },
-      // Description / condition notes
-      { description: { contains: q, mode: "insensitive" } },
-      { conditionNotes: { contains: q, mode: "insensitive" } },
-    ];
+    // Typo-tolerant (fuzzy) matching via pg_trgm. Handles "samsing" -> Samsung.
+    const fuzzy = await fuzzyMatchProducts({ q, availability: ["AVAILABLE"], limit: 100 });
+    const fuzzyIds = fuzzy.map((f) => f.id);
+
+    if (fuzzyIds.length > 0) {
+      // Primary signal: fuzzy-ranked title/brand/model matches. Keep the
+      // lower-signal description/notes contains as an OR so nothing is lost.
+      where.OR = [
+        { id: { in: fuzzyIds } },
+        { description: { contains: q, mode: "insensitive" } },
+        { conditionNotes: { contains: q, mode: "insensitive" } },
+      ];
+    } else {
+      // No fuzzy match at all — fall back to plain substring search.
+      where.OR = [
+        { title: { contains: q, mode: "insensitive" } },
+        { brand: { name: { contains: q, mode: "insensitive" } } },
+        { model: { name: { contains: q, mode: "insensitive" } } },
+        { searchText: { contains: q.toLowerCase() } },
+        { description: { contains: q, mode: "insensitive" } },
+        { conditionNotes: { contains: q, mode: "insensitive" } },
+      ];
+    }
   }
 
   if (parsed.brands && parsed.brands.length > 0) {
@@ -970,72 +999,65 @@ export async function duplicateProduct(id: string) {
 /**
  * List all brands for the product form dropdown.
  */
-export async function listBrands() {
+export const listBrands = cache(async () => {
   const brands = await db.brand.findMany({
     orderBy: { sortOrder: "asc" },
     select: { id: true, name: true, slug: true },
   });
   return brands;
-}
+});
 
 /**
  * List all models for the cascading model dropdown.
  */
-export async function listModels() {
+export const listModels = cache(async () => {
   const models = await db.phoneModel.findMany({
     orderBy: [{ brandId: "asc" }, { name: "asc" }],
     select: { id: true, name: true, brandId: true, deviceType: true },
   });
   return models;
-}
+});
 
 /**
  * Autocomplete suggestions for the public search box.
  * Returns live products (AVAILABLE/RESERVED) + matching brands + models.
  * Lightweight: capped results, only the fields the dropdown needs.
+ * Typo-tolerant: "samsing" still surfaces Samsung products/brands.
  */
 export async function searchSuggestions(q: string) {
-  const query = q.trim().toLowerCase();
+  const query = q.trim();
   if (query.length < 1) {
     return { products: [], brands: [], models: [] };
   }
 
-  const [products, brands, models] = await Promise.all([
-    db.product.findMany({
-      where: {
-        availability: { in: ["AVAILABLE", "RESERVED"] },
-        OR: [
-          { title: { contains: query, mode: "insensitive" } },
-          { brand: { name: { contains: query, mode: "insensitive" } } },
-          { model: { name: { contains: query, mode: "insensitive" } } },
-        ],
-      },
-      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-      take: 6,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        deviceType: true,
-        storageGb: true,
-        pricePaise: true,
-        brand: { select: { name: true } },
-        media: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
-      },
-    }),
-    db.brand.findMany({
-      where: { name: { contains: query, mode: "insensitive" } },
-      orderBy: { sortOrder: "asc" },
-      take: 3,
-      select: { id: true, name: true, slug: true },
-    }),
-    db.phoneModel.findMany({
-      where: { name: { contains: query, mode: "insensitive" } },
-      orderBy: { name: "asc" },
-      take: 3,
-      select: { id: true, name: true, slug: true, brand: { select: { name: true } } },
-    }),
+  const [fuzzyProducts, brands, models] = await Promise.all([
+    fuzzyMatchProducts({ q: query, availability: ["AVAILABLE", "RESERVED"], limit: 6 }),
+    fuzzyMatchBrands(query),
+    fuzzyMatchModels(query),
   ]);
+
+  // Fetch product rows in the fuzzy-ranked order.
+  const ids = fuzzyProducts.map((f) => f.id);
+  const productRows =
+    ids.length > 0
+      ? await db.product.findMany({
+          where: { id: { in: ids } },
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            deviceType: true,
+            storageGb: true,
+            pricePaise: true,
+            brand: { select: { name: true } },
+            media: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
+          },
+        })
+      : [];
+  const rowById = new Map(productRows.map((p) => [p.id, p]));
+  const products = ids
+    .map((id) => rowById.get(id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   return {
     products: products.map((p) => ({
@@ -1053,7 +1075,7 @@ export async function searchSuggestions(q: string) {
       id: m.id,
       name: m.name,
       slug: m.slug,
-      brandName: m.brand.name,
+      brandName: m.brandName,
     })),
   };
 }

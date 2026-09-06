@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "@/server/db/client";
 
 // ─── Announcement Queries ────────────────────────────────────────────
@@ -5,8 +6,9 @@ import { db } from "@/server/db/client";
 /**
  * Get the currently active announcement (for public website banner).
  * Returns null if no announcement is active or within its date window.
+ * Wrapped in `cache()` so the banner data is fetched once per request.
  */
-export async function getActiveAnnouncement() {
+export const getActiveAnnouncement = cache(async () => {
   const now = new Date();
 
   return db.announcement.findFirst({
@@ -21,7 +23,7 @@ export async function getActiveAnnouncement() {
     },
     orderBy: { id: "desc" },
   });
-}
+});
 
 /**
  * List all announcements for admin management (newest first).

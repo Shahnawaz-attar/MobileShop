@@ -1,11 +1,16 @@
+import { cache } from "react";
 import { db } from "@/server/db/client";
 import type { PublicShopInfo } from "@/types";
 
 /**
  * Retrieves the singleton Shop configuration for this deployment.
  * The system assumes exactly one Shop row exists.
+ *
+ * Wrapped in React `cache()` so the many call sites across a layout, its
+ * generateMetadata, and page bodies share a SINGLE DB query per request
+ * instead of hitting the (remote) database once each.
  */
-export async function getShop() {
+export const getShop = cache(async () => {
   const shop = await db.shop.findFirst({
     orderBy: { createdAt: "asc" },
   });
@@ -15,7 +20,7 @@ export async function getShop() {
   }
 
   return shop;
-}
+});
 
 /**
  * Maps the raw Prisma Shop row → PublicShopInfo DTO.
