@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { toPng, toBlob } from "html-to-image";
 import { Download, Share2, Loader2 } from "lucide-react";
-import { formatINR } from "@/lib/money";
+import { formatINR, discountPercent } from "@/lib/money";
 import { CONDITION_LABELS } from "@/lib/constants";
 
 interface StatusPosterProduct {
@@ -48,10 +48,7 @@ export function WhatsAppStatusGenerator({
   const [error, setError] = useState<string | null>(null);
 
   const storageLabel = [product.storageGb ? `${product.storageGb}GB` : null, product.ramGb ? `${product.ramGb}GB RAM` : null, product.colour].filter(Boolean).join(" • ");
-  const discount =
-    product.mrpPaise && product.mrpPaise > product.pricePaise
-      ? Math.round(((product.mrpPaise - product.pricePaise) / product.mrpPaise) * 100)
-      : 0;
+  const discount = discountPercent(product.pricePaise, product.mrpPaise);
   const conditionLabel = CONDITION_LABELS[product.condition as keyof typeof CONDITION_LABELS] ?? product.condition;
 
   async function renderPoster(): Promise<Blob | null> {
@@ -195,7 +192,7 @@ export function WhatsAppStatusGenerator({
               <span className="text-3xl font-black tracking-tight text-[#25D366]">
                 {formatINR(product.pricePaise)}
               </span>
-              {discount > 0 && (
+              {discount !== null && discount > 0 && (
                 <span className="pb-1 text-sm text-white/50 line-through">
                   {formatINR(product.mrpPaise!)}
                 </span>
@@ -206,7 +203,7 @@ export function WhatsAppStatusGenerator({
               <span className="rounded-full bg-[#25D366]/15 px-2.5 py-1 text-[11px] font-bold text-[#25D366]">
                 {conditionLabel}
               </span>
-              {discount > 0 && (
+              {discount !== null && discount > 0 && (
                 <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white/80">
                   {discount}% off MRP
                 </span>

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trackClientEvent } from "@/server/modules/analytics/track-client-event";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { RATE_LIMITS } from "@/lib/constants";
 
 const trackSchema = z.object({
   type: z.enum([
@@ -16,6 +18,21 @@ const trackSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Throttle public event volume per IP so the endpoint can't be hammered
+    // into inflating metrics or flooding the AnalyticsEvent table.
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+    const overLimit = consumeRateLimit(
+      `analytics:${ip}`,
+      RATE_LIMITS.ANALYTICS_EVENTS_PER_MINUTE,
+      60 * 1000
+    );
+    if (overLimit) {
+      return NextResponse.json({ ok: false }, { status: 429 });
+    }
+
     const parsed = trackSchema.parse(await request.json());
     await trackClientEvent(parsed);
     return NextResponse.json({ ok: true });

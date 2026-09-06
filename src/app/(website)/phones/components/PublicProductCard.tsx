@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { BadgePercent } from "lucide-react";
-import { formatINR } from "@/lib/money";
+import { formatINR, discountPercent } from "@/lib/money";
 import { CONDITION_LABELS } from "@/lib/constants";
 import { ProductEngagement } from "@/components/public/ProductEngagement";
 import type { Condition, Availability } from "@/types";
@@ -28,10 +28,7 @@ interface PublicProductCardProps {
 }
 
 export function PublicProductCard({ product, priority = false }: PublicProductCardProps) {
-  const discount =
-    product.mrpPaise && product.mrpPaise > product.pricePaise
-      ? Math.round(((product.mrpPaise - product.pricePaise) / product.mrpPaise) * 100)
-      : 0;
+  const discount = discountPercent(product.pricePaise, product.mrpPaise);
 
   return (
     <Link
@@ -114,7 +111,7 @@ export function PublicProductCard({ product, priority = false }: PublicProductCa
               </span>
             )}
           </div>
-          {discount > 0 && (
+          {discount !== null && discount > 0 && (
             <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-success/10 px-2 py-1 text-xs font-bold text-success">
               <BadgePercent className="h-3 w-3" aria-hidden="true" />
               Save {discount}%

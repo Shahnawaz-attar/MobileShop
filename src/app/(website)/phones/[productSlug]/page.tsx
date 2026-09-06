@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { HardDrive, Cpu, Palette, BatteryMedium, ShieldCheck, Smartphone, Package, PlugZap, Cable } from "lucide-react";
 import { getPublicProduct } from "@/server/modules/catalog";
 import { getShop } from "@/server/modules/shop";
-import { formatINR } from "@/lib/money";
+import { formatINR, discountPercent } from "@/lib/money";
 import { CONDITION_LABELS, CONDITION_DESCRIPTIONS } from "@/lib/constants";
 import { buildWhatsAppLink, generateProductEnquiryText, generateProductShareText, buildWhatsAppShareLink } from "@/lib/whatsapp";
 import { resolvePublicAppUrl } from "@/lib/qr";
@@ -90,9 +90,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   );
   const shareWhatsappUrl = buildWhatsAppShareLink(shareText);
 
-  const discount = product.mrpPaise && product.mrpPaise > product.pricePaise
-    ? Math.round(((product.mrpPaise - product.pricePaise) / product.mrpPaise) * 100)
-    : 0;
+  const discount = discountPercent(product.pricePaise, product.mrpPaise);
 
   const primaryMedia = product.media.find(m => m.kind === "FRONT") || product.media[0];
   const variantStr = [product.storageGb ? `${product.storageGb}GB` : null, product.colour].filter(Boolean).join(" ");
@@ -190,11 +188,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <span className="text-4xl font-black leading-none tracking-tight text-ink sm:text-5xl">
                 {formatINR(product.pricePaise)}
               </span>
-              {product.mrpPaise && product.mrpPaise > product.pricePaise && (
+              {discount !== null && (
                 <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-start">
-                  <span className="text-lg font-semibold text-ink-faint line-through sm:text-xl">
-                    {formatINR(product.mrpPaise)}
-                  </span>
+                  {product.mrpPaise && product.mrpPaise > product.pricePaise && (
+                    <span className="text-lg font-semibold text-ink-faint line-through sm:text-xl">
+                      {formatINR(product.mrpPaise)}
+                    </span>
+                  )}
                   <span className="inline-flex items-center rounded-md bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
                     {discount}% OFF
                   </span>

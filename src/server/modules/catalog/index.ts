@@ -216,7 +216,8 @@ export async function listAdminProducts(filters: AdminFilters = {}) {
   const [products, total] = await Promise.all([
     db.product.findMany({
       where,
-      orderBy: [{ updatedAt: "desc" }],
+      // Unique id tie-breaker keeps cursor pagination deterministic when updatedAt collides.
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       take: parsed.limit + 1, // fetch one extra to detect next page
       ...(parsed.cursor
         ? { cursor: { id: parsed.cursor }, skip: 1 }
@@ -342,13 +343,14 @@ export async function listPublicProducts(filters: PublicFilters = {}) {
     if (parsed.maxPrice !== undefined) where.pricePaise.lte = parsed.maxPrice;
   }
 
-  // Prisma Order By Clause
+  // Prisma Order By Clause. Always end with a unique key (id) so cursor
+  // pagination is deterministic when earlier sort keys tie (same price/date).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let orderBy: any = [{ publishedAt: "desc" }, { createdAt: "desc" }];
+  let orderBy: any = [{ publishedAt: "desc" }, { createdAt: "desc" }, { id: "desc" }];
   if (parsed.sort === "PRICE_ASC") {
-    orderBy = [{ pricePaise: "asc" }, { publishedAt: "desc" }];
+    orderBy = [{ pricePaise: "asc" }, { publishedAt: "desc" }, { id: "desc" }];
   } else if (parsed.sort === "PRICE_DESC") {
-    orderBy = [{ pricePaise: "desc" }, { publishedAt: "desc" }];
+    orderBy = [{ pricePaise: "desc" }, { publishedAt: "desc" }, { id: "desc" }];
   }
 
   const [products, total] = await Promise.all([
@@ -458,11 +460,12 @@ export async function listPublicSoldProducts(limit: number = 4) {
 
 /**
  * Get the product the owner chose to feature in the homepage hero showcase.
- * Returns null if none is selected.
+ * Returns null if none is selected OR the chosen one is no longer AVAILABLE
+ * (a sold/reserved/draft phone must never be showcased as purchasable).
  */
 export async function getHeroProduct() {
   const product = await db.product.findFirst({
-    where: { isHero: true },
+    where: { isHero: true, availability: "AVAILABLE" },
     select: {
       id: true,
       slug: true,
@@ -627,18 +630,21 @@ export async function getPublicProduct(slug: string) {
     },
   });
 
+  // Strip the internal Cloudinary public id — it must never reach the public payload.
+  const { billPublicId: _billPublicId, ...publicProduct } = product;
+
   return {
-    ...product,
+    ...publicProduct,
     whatsappClicksWeek,
-    purchasedAt: product.hasBill ? product.purchasedAt : null,
+    purchasedAt: publicProduct.hasBill ? publicProduct.purchasedAt : null,
     billUrl:
-      product.hasBill &&
-      product.billUrl &&
-      product.billPublicId &&
-      !product.billUrl.includes("/raw/upload/")
-        ? resolveBillViewUrl(product.billPublicId, product.billUrl)
-        : product.hasBill && product.billUrl && !product.billUrl.includes("/raw/upload/") && !isPdfBillUrl(product.billUrl)
-          ? product.billUrl
+      publicProduct.hasBill &&
+      publicProduct.billUrl &&
+      _billPublicId &&
+      !publicProduct.billUrl.includes("/raw/upload/")
+        ? resolveBillViewUrl(_billPublicId, publicProduct.billUrl)
+        : publicProduct.hasBill && publicProduct.billUrl && !publicProduct.billUrl.includes("/raw/upload/") && !isPdfBillUrl(publicProduct.billUrl)
+          ? publicProduct.billUrl
           : null,
   };
 }
@@ -757,7 +763,7 @@ export async function updateProduct(id: string, input: ProductInput) {
 
   const existing = await db.product.findUnique({
     where: { id },
-    select: { id: true, availability: true, publishedAt: true, isHero: true },
+    select: { id: true, availability: true, publishedAt: true, soldAt: true, isHero: true },
   });
   if (!existing) {
     throw new Error("Product not found");
@@ -794,14 +800,20 @@ export async function updateProduct(id: string, input: ProductInput) {
   // Compute availability transitions
   const newAvailability = parsed.availability ?? existing.availability;
   let publishedAt = existing.publishedAt;
-  let soldAt: Date | null = null;
+  // Preserve the original soldAt; only set a fresh one when transitioning INTO SOLD.
+  let soldAt = existing.soldAt;
 
   if (newAvailability === "AVAILABLE" && !existing.publishedAt) {
     publishedAt = new Date();
   }
 
   if (newAvailability === "SOLD") {
-    soldAt = new Date();
+    if (existing.availability !== "SOLD") {
+      soldAt = new Date();
+    }
+  } else {
+    // Reverting to a non-SOLD state clears the sold timestamp.
+    soldAt = null;
   }
 
   const product = await db.product.update({
@@ -835,7 +847,8 @@ export async function updateProduct(id: string, input: ProductInput) {
       description: parsed.description ?? null,
       availability: newAvailability,
       isFeatured: parsed.isFeatured ?? false,
-      isHero: parsed.isHero ?? existing.isHero,
+      // A phone that is no longer AVAILABLE must not stay the homepage hero.
+      isHero: newAvailability === "AVAILABLE" ? (parsed.isHero ?? existing.isHero) : false,
       publishedAt,
       soldAt,
       internalNotes: parsed.internalNotes ?? null,
@@ -871,7 +884,7 @@ export async function setAvailability(id: string, availability: Availability) {
 
   const existing = await db.product.findUnique({
     where: { id },
-    select: { id: true, slug: true, availability: true, publishedAt: true, soldAt: true },
+    select: { id: true, slug: true, availability: true, publishedAt: true, soldAt: true, isHero: true },
   });
   if (!existing) {
     throw new Error("Product not found");
@@ -899,6 +912,8 @@ export async function setAvailability(id: string, availability: Availability) {
       availability: parsed,
       publishedAt,
       soldAt,
+      // A phone that is no longer AVAILABLE must not stay the homepage hero.
+      isHero: parsed === "AVAILABLE" ? existing.isHero : false,
     },
     select: { id: true, slug: true, title: true, availability: true },
   });

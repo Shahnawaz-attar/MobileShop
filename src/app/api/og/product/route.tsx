@@ -4,6 +4,21 @@ import { ogSafeCloudinaryUrl } from "@/lib/image";
 
 export const runtime = "edge";
 
+/**
+ * Only allow images from THIS shop's own Cloudinary account. Satori fetches
+ * <img src> server-side, so letting arbitrary URLs through would be an SSRF
+ * vector (e.g. pointing at cloud metadata / internal hosts). Anything else is
+ * dropped so the card renders without a photo rather than fetching a bad host.
+ */
+function allowCloudinaryImage(url: string): string {
+  const allowed =
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
+    process.env.CLOUDINARY_CLOUD_NAME;
+  if (!allowed) return "";
+  const match = url.match(/res\.cloudinary\.com\/([^/]+)\//);
+  return match && match[1] === allowed ? url : "";
+}
+
 function formatOgPrice(price: string): string {
   const n = Number(price);
   if (!Number.isFinite(n)) return price;
@@ -16,7 +31,8 @@ export async function GET(request: NextRequest) {
 
     const title = searchParams.get("title")?.slice(0, 60) || "Premium Pre-Owned Phone";
     const price = searchParams.get("price") || "";
-    const image = searchParams.get("image") ? ogSafeCloudinaryUrl(searchParams.get("image")!) : "";
+    const rawImage = searchParams.get("image");
+    const image = rawImage ? allowCloudinaryImage(ogSafeCloudinaryUrl(rawImage)) : "";
     const shop = searchParams.get("shop") || "MobileShop";
     const imageW = Number(searchParams.get("imageW")) || 800;
     const imageH = Number(searchParams.get("imageH")) || 800;
